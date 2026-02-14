@@ -1,5 +1,104 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Database (Prisma + SQLite)
+
+The project uses Prisma with SQLite. Ensure `DATABASE_URL` is set in `.env` (e.g. `DATABASE_URL="file:./dev.db"`).
+
+**Run migrations and generate the client:**
+
+```bash
+# Create and apply the initial migration
+npx prisma migrate dev --name init
+
+# Generate Prisma Client (also runs automatically after migrate)
+npx prisma generate
+```
+
+## Testing POST /api/generate (credits)
+
+**0. LLM key (required for 200)**  
+Set at least one in `.env`: `OPENROUTER_API_KEY`, `OPENAI_API_KEY`, or `LLM_API_KEY`. For mock-only testing use e.g. `LLM_API_KEY=sk-mock`.
+
+**1. Seed credits**
+
+Get your `uid` from `http://localhost:3000/api/me`. Then (replace `YOUR_UID`):
+
+```bash
+# One-liner with Prisma CLI (Windows PowerShell: use single quotes for the SQL)
+echo "UPDATE User SET credits = 5 WHERE id = 'YOUR_UID';" | npx prisma db execute --stdin
+```
+
+Or: `npx prisma studio` → edit `User.credits`.
+
+**2. Success (200, decrements 1 credit)**
+
+```bash
+curl -X POST http://localhost:3000/api/generate -H "Content-Type: application/json" -d "{\"idea\":\"Selling handmade ceramic mugs with custom pet portraits\", \"micro\":\"Custom pet portrait mugs\"}"
+```
+
+Response: `{ uid, idea, micro, listing: { title, tags, description, rationale, beforeScore, afterScore }, creditsLeft }`. Same uid + same body → same listing (deterministic).
+
+**3. No credits (402)**
+
+When `creditsLeft` is 0, same request returns **402** with `{ "error": "No credits" }`.
+
+## Stripe Launch Switch
+
+Stripe is **off by default**. When disabled, `/api/checkout` returns **501** `{ "error": "Stripe disabled" }` and the webhook does not add credits. Enable only when ready for launch.
+
+**Env template:**
+
+```bash
+# Default: Stripe disabled (no buy, webhook no-op)
+STRIPE_ENABLED=false
+
+# Required when STRIPE_ENABLED=true (for success/cancel redirects)
+NEXT_PUBLIC_APP_URL=https://yourdomain.com
+# or APP_URL=https://yourdomain.com
+
+# Stripe keys (only used when STRIPE_ENABLED=true)
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+```
+
+**Launch day steps:**
+
+1. Set `STRIPE_ENABLED=true`.
+2. Set `NEXT_PUBLIC_APP_URL` (or `APP_URL`) to your production URL.
+3. Add webhook endpoint in Stripe Dashboard: `https://yourdomain.com/api/stripe/webhook`, event `checkout.session.completed`.
+4. Set `STRIPE_WEBHOOK_SECRET` to the signing secret from the Dashboard.
+5. Deploy.
+
+**UI:** When you add a “Buy Credits” button, call `GET /api/config` and use `stripeEnabled`. If `false`, show “Coming soon” or hide the button.
+
+## Stripe: purchase → +3 credits (when enabled)
+
+**Env:** See “Stripe Launch Switch” above. When `STRIPE_ENABLED=true` you need `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and `NEXT_PUBLIC_APP_URL` (or `APP_URL`).
+
+**Local webhook with Stripe CLI:**
+
+```bash
+# Terminal 1: forward webhooks to your app
+stripe listen --forward-to localhost:3000/api/stripe/webhook
+# Copy the signing secret (whsec_...) into .env as STRIPE_WEBHOOK_SECRET
+
+# Terminal 2: trigger a test "checkout.session.completed" (session has sample data; for real uid use a real checkout)
+stripe trigger checkout.session.completed
+```
+
+**Passing metadata (uid) with trigger:** The CLI trigger uses a fixture. To add `metadata.uid` for your test user, use a real checkout flow:
+
+1. `curl -X POST http://localhost:3000/api/checkout -b cookies.txt` (or open in browser with same cookie as /api/me).
+2. Open the returned `url` in the browser and pay with test card `4242 4242 4242 4242`.
+3. Stripe sends `checkout.session.completed` to your webhook; metadata includes the `uid` from step 1, and the user gets +3 credits.
+
+**Proof flow (curl):**
+
+- (a) Ensure user has 0 credits → `POST /api/generate` returns **402**.
+- (b) Run `stripe listen --forward-to localhost:3000/api/stripe/webhook`, then complete a checkout (or use trigger with a fixture that includes `metadata.uid`); user credits become 3.  
+  **Without Stripe CLI:** run `node scripts/simulate-stripe-webhook.js <uid>` (same `STRIPE_WEBHOOK_SECRET` in `.env`, dev server running). If the app runs on another port, use `PORT=3001 node scripts/simulate-stripe-webhook.js <uid>`. User credits become 3.
+- (c) `POST /api/generate` returns **200** and `creditsLeft: 2`.
+
 ## Getting Started
 
 First, run the development server:
