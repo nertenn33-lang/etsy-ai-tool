@@ -1,18 +1,62 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Database (Prisma + SQLite)
+## Landing-only mode (SEO + lead capture, no DB/Stripe)
 
-The project uses Prisma with SQLite. Ensure `DATABASE_URL` is set in `.env` (e.g. `DATABASE_URL="file:./dev.db"`).
+When the backend or DB is not ready, you can ship a **landing-only** version that does not depend on `DATABASE_URL` or Stripe. The build succeeds without a database; `/` shows a landing page with waitlist signup and a link to a demo Analyze page.
+
+**How to enable landing mode in Vercel:**
+
+1. In Vercel: Project → **Settings** → **Environment Variables**.
+2. Add:
+   - **Name:** `LANDING_MODE`  
+     **Value:** `true`  
+     **Environments:** Production (and Preview if you want).
+3. Add:
+   - **Name:** `NEXT_PUBLIC_LANDING_MODE`  
+     **Value:** `true`  
+     **Environments:** same as above.
+4. **Do not** set `DATABASE_URL` (optional for this mode).
+5. Redeploy.
+
+**Result:**
+
+- **/** shows the landing page (RankOnEtsy hero, “Join waitlist”, “Try demo (Analyze)”).
+- **/analyze** is a standalone demo (Analyze only; no credits or checkout).
+- **/api/waitlist** accepts POST `{ "email": "..." }` and logs the email (Vercel logs); returns 200.
+- **/api/checkout** returns **503** with a friendly message: “Payments temporarily offline. Join the waitlist…”
+- A top banner shows: “Payments temporarily offline — Join waitlist”.
+
+To **disable** landing mode and run the full app, remove both env vars (or set them to `false`) and set `DATABASE_URL` (and Stripe vars if needed), then redeploy.
+
+## Database (Prisma + PostgreSQL / Neon)
+
+The project uses **PostgreSQL** (e.g. [Neon](https://neon.tech)) for Vercel serverless. SQLite is not used in production.
+
+- Set `DATABASE_URL` in `.env` (and in Vercel → Environment Variables) to your Neon (or other Postgres) connection string, e.g.  
+  `DATABASE_URL="postgresql://user:pass@ep-xxx.region.aws.neon.tech/neondb?sslmode=require"`.  
+  Required for both local run and Vercel build.
 
 **Run migrations and generate the client:**
 
 ```bash
-# Create and apply the initial migration
-npx prisma migrate dev --name init
+# Apply migrations (creates User + StripeEvent on Postgres)
+npx prisma migrate deploy
 
-# Generate Prisma Client (also runs automatically after migrate)
+# Or for local dev with a fresh DB
+npx prisma migrate dev
+
+# Generate Prisma Client (runs on postinstall / vercel-build too)
 npx prisma generate
 ```
+
+### Neon + Vercel deploy
+
+1. Create a project at [Neon](https://neon.tech) and copy the connection string.
+2. In Vercel: Project → Settings → Environment Variables → add `DATABASE_URL` (Value = Neon URL), for **All Environments**.
+3. Run migrations against the same DB once (local or CI):  
+   `npx prisma migrate deploy`  
+   (Or use Neon’s SQL editor to run the SQL from `prisma/migrations/20260215120000_postgres_init/migration.sql`.)
+4. Redeploy the app. `/api/me` should return 200; Stripe checkout → webhook should add +3 credits.
 
 ## Testing POST /api/generate (credits)
 

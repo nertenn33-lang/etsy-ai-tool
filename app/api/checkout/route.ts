@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { getOrCreateUid, uidCookieOptions } from "@/src/lib/uid";
 import {
+  LANDING_MODE,
   STRIPE_ENABLED,
   getAppUrlForStripe,
 } from "@/src/lib/config";
@@ -52,6 +53,17 @@ export async function POST(request: Request) {
 
     logCheckoutEnvOnce();
 
+    if (LANDING_MODE) {
+      const response = NextResponse.json(
+        { error: "Payments temporarily offline. Join the waitlist to be notified when we're back." },
+        { status: 503 }
+      );
+      if (cookieValueToSet) {
+        response.cookies.set("uid", cookieValueToSet, uidCookieOptions);
+      }
+      return response;
+    }
+
     if (!isStripeEnabled()) {
       const message =
         process.env.NODE_ENV === "production"
@@ -66,7 +78,7 @@ export async function POST(request: Request) {
 
     const config = validateStripeConfig();
     if (!config.ok) {
-      return NextResponse.json({ error: config.message }, { status: 503 });
+      return NextResponse.json({ error: config.message }, { status: 500 });
     }
 
     const appUrl = getAppUrlForStripe();
@@ -74,7 +86,7 @@ export async function POST(request: Request) {
       console.warn("[checkout] NEXT_PUBLIC_APP_URL / APP_URL not set; redirect URLs may fail");
       return NextResponse.json(
         { error: "Missing NEXT_PUBLIC_APP_URL (required for checkout redirect URLs)" },
-        { status: 503 },
+        { status: 500 },
       );
     }
 

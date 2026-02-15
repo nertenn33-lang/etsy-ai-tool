@@ -1,5 +1,0 @@
--- CreateTable
-CREATE TABLE "StripeEvent" (
-    "id" TEXT NOT NULL PRIMARY KEY,
-    "processedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-);

@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { getOrCreateUid, uidCookieOptions } from "@/src/lib/uid";
-import { prisma } from "@/src/lib/prisma";
+import { getPrisma } from "@/src/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
+    const prisma = getPrisma();
     const { uid, cookieValueToSet } = await getOrCreateUid();
 
     const user = await prisma.user.upsert({
@@ -25,7 +26,8 @@ export async function GET() {
 
     return response;
   } catch (err) {
-    console.error("[GET /api/me]", err);
+    const code = err && typeof (err as { code?: string }).code === "string" ? (err as { code: string }).code : "";
+    console.error("[GET /api/me] Failed to load user.", code ? `code=${code}` : "", err);
     return NextResponse.json(
       { error: "Failed to load user" },
       { status: 500 }

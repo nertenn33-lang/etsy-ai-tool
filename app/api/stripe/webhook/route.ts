@@ -4,7 +4,7 @@
  */
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { prisma } from "@/src/lib/prisma";
+import { getPrisma } from "@/src/lib/prisma";
 import { STRIPE_ENABLED } from "@/src/lib/config";
 
 export const runtime = "nodejs";
@@ -102,6 +102,7 @@ async function handleWebhook(request: Request) {
 
   const creditsToAdd = Number(session.metadata?.creditsToAdd ?? 3) || 3;
 
+  const prisma = getPrisma();
   const already = await prisma.stripeEvent.findUnique({
     where: { id: event.id },
   });
@@ -133,7 +134,7 @@ async function handleWebhook(request: Request) {
       console.error("[stripe webhook] stack:", err.stack);
     }
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Processing failed" },
+      { error: "Processing failed" },
       { status: 500 },
     );
   }

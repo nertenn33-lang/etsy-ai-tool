@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getOrCreateUid, uidCookieOptions } from "@/src/lib/uid";
-import { prisma } from "@/src/lib/prisma";
+import { getPrisma } from "@/src/lib/prisma";
 import { getMockListing } from "@/src/lib/generation/mock";
 import { getEtsyEnrichment } from "@/src/lib/etsy/enrichment";
 
@@ -47,6 +47,7 @@ export async function POST(request: Request) {
       );
     }
 
+    const prisma = getPrisma();
     const { uid, cookieValueToSet } = await getOrCreateUid();
 
     await prisma.user.upsert({
