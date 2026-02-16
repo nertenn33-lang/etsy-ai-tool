@@ -1,9 +1,11 @@
 "use client";
 
-import { Lightbulb, ArrowRight, Target, TrendingUp, ImageIcon, AlertCircle } from "lucide-react";
+import { Lightbulb, ArrowRight, Target, TrendingUp, ImageIcon, AlertCircle, Lock } from "lucide-react";
 import { type EtsyTrendData } from "@/src/lib/etsyDataEngine";
 
-export default function ActionPlan({ data }: { data: EtsyTrendData }) {
+export default function ActionPlan({ data, credits, onUnlock }: { data: EtsyTrendData; credits: number; onUnlock: () => void }) {
+    const isLocked = credits === 0;
+
     // Logic to generate smart recommendations
     const tips = [];
 
@@ -91,16 +93,38 @@ export default function ActionPlan({ data }: { data: EtsyTrendData }) {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {tips.map((tip, i) => (
-                        <div key={i} className="group relative rounded-xl bg-white/5 border border-white/10 p-5 hover:bg-white/10 transition-colors">
-                            <div className={`w-10 h-10 rounded-lg ${tip.bg} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                                <tip.icon className={`w-5 h-5 ${tip.color}`} />
+                <div className="relative">
+                    <div className={`grid grid-cols-1 md:grid-cols-3 gap-6 ${isLocked ? 'blur-md select-none opacity-50' : ''}`}>
+                        {tips.map((tip, i) => (
+                            <div key={i} className="group relative rounded-xl bg-white/5 border border-white/10 p-5 hover:bg-white/10 transition-colors">
+                                <div className={`w-10 h-10 rounded-lg ${tip.bg} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                                    <tip.icon className={`w-5 h-5 ${tip.color}`} />
+                                </div>
+                                <h4 className="text-lg font-semibold text-white mb-2">{tip.title}</h4>
+                                <p className="text-sm text-slate-400 leading-relaxed">{tip.desc}</p>
                             </div>
-                            <h4 className="text-lg font-semibold text-white mb-2">{tip.title}</h4>
-                            <p className="text-sm text-slate-400 leading-relaxed">{tip.desc}</p>
+                        ))}
+                    </div>
+
+                    {isLocked && (
+                        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center p-6">
+                            <div className="bg-slate-900/90 border border-indigo-500/30 backdrop-blur-md rounded-2xl p-8 max-w-md shadow-2xl">
+                                <div className="mx-auto w-12 h-12 bg-indigo-500/20 rounded-full flex items-center justify-center mb-4">
+                                    <Lock className="w-6 h-6 text-indigo-400" />
+                                </div>
+                                <h4 className="text-xl font-bold text-white mb-2">Unlock Personalized AI Action Plan</h4>
+                                <p className="text-slate-400 text-sm mb-6">
+                                    Get 10+ SEO tips, competitor secrets, and a step-by-step coaching plan with the Starter Pack.
+                                </p>
+                                <button
+                                    onClick={onUnlock}
+                                    className="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-fuchsia-600 hover:from-indigo-500 hover:to-fuchsia-500 text-white rounded-xl font-bold tracking-wide transition-all shadow-[0_0_20px_rgba(99,102,241,0.5)] hover:shadow-[0_0_30px_rgba(99,102,241,0.7)] hover:scale-105 active:scale-95 animate-pulse"
+                                >
+                                    Unlock with Starter Pack
+                                </button>
+                            </div>
                         </div>
-                    ))}
+                    )}
                 </div>
             </div>
         </div>

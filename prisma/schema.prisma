@@ -10,7 +10,7 @@ datasource db {
 
 model User {
   id        String   @id
-  credits   Int      @default(0)
+  credits   Int      @default(1)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

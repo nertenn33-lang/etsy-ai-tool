@@ -39,7 +39,7 @@ export default function DashboardClient({ initialKeyword = "", initialData, read
     const [keyword, setKeyword] = useState(initialKeyword);
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState<EtsyTrendData | null>(initialData || null);
-    const [credits, setCredits] = useState(0);
+    const [credits, setCredits] = useState(1);
     const [showPricing, setShowPricing] = useState(false);
 
     async function handleAnalyze(e: React.FormEvent) {
@@ -86,9 +86,8 @@ export default function DashboardClient({ initialKeyword = "", initialData, read
                             >
                                 <Zap className={`w-4 h-4 ${credits > 0 ? 'text-yellow-400' : 'text-slate-600'} group-hover:scale-110 transition-transform`} />
                                 <span className="text-sm font-medium">{credits} Credits</span>
-                                <span className="ml-2 text-[10px] text-indigo-300 bg-indigo-500/10 px-2 py-0.5 rounded-full uppercase font-bold tracking-wider border border-indigo-500/20">
-                                    Add
-                                </span>
+                                {credits === 1 && <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">Free Trial</span>}
+                                {credits !== 1 && <span className="ml-2 text-[10px] text-indigo-300 bg-indigo-500/10 px-2 py-0.5 rounded-full uppercase font-bold tracking-wider border border-indigo-500/20">Add</span>}
                             </button>
                             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 border border-white/10 shadow-inner" />
                         </div>
@@ -350,7 +349,11 @@ export default function DashboardClient({ initialKeyword = "", initialData, read
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.9 }}
                         >
-                            <ActionPlan data={data} />
+                            <ActionPlan
+                                data={data}
+                                credits={credits}
+                                onUnlock={() => setShowPricing(true)}
+                            />
                         </motion.div>
                     </motion.div>
                 )}
