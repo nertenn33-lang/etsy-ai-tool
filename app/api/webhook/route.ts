@@ -3,12 +3,13 @@ import { stripe } from "@/src/lib/stripe";
 import { prisma } from "@/src/lib/prisma";
 import Stripe from "stripe";
 
-// Disable body parsing logic is handled automatically in App Router by using req.text() or req.json()
+// bodyParser is handled automatically in App Router by using req.text()
 
 export async function POST(req: Request) {
     const body = await req.text();
     const signature = req.headers.get("stripe-signature") as string;
 
+    // Strictly trim the webhook secret
     const webhookSecret = (process.env.STRIPE_WEBHOOK_SECRET || "").trim();
 
     if (!webhookSecret) {
@@ -28,7 +29,7 @@ export async function POST(req: Request) {
             webhookSecret
         );
     } catch (err: any) {
-        console.error(`[Webhook] Signature verification failed: ${err.message}`);
+        console.error('WEBHOOK_SIG_ERROR:', err.message);
         return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
     }
 
@@ -38,16 +39,17 @@ export async function POST(req: Request) {
         if (event.type === "checkout.session.completed") {
             const session = event.data.object as Stripe.Checkout.Session;
 
-            // Extract uid/userId. Metadata or client_reference_id
+            // Extract identifier. Metadata or client_reference_id
+            // Note: We use the 'id' field in Prisma as per schema.
             const userId = session.client_reference_id || session.metadata?.userId || session.metadata?.uid;
 
-            // Expected 3 credits
-            const creditsToAdd = parseInt(session.metadata?.creditsToAdd || "3", 10);
+            // Expected 3 credits + ensure specific Number(3) logic as requested
+            const creditsToAdd = Number(3);
 
             if (userId) {
                 console.log(`[Webhook] Processing success for user: ${userId}, credits: ${creditsToAdd}`);
 
-                // We use increment to be safe. If user doesn't exist (unlikely), we create them with 3+1 (bonus).
+                // We use increment. If user doesn't exist, we create them with 3+1 (bonus).
                 await prisma.user.upsert({
                     where: { id: userId },
                     create: {
@@ -62,15 +64,15 @@ export async function POST(req: Request) {
                 });
                 console.log(`[Webhook] Successfully updated credits for ${userId}`);
             } else {
-                console.error("[Webhook] ERROR: No userId found in session metadata or client_reference_id.", session.id);
+                console.error("[Webhook] ERROR: No identifier (uid/userId/client_reference_id) found in session.");
             }
         }
 
         return NextResponse.json({ received: true });
-    } catch (err) {
-        console.error("[Webhook] Error processing event:", err);
+    } catch (err: any) {
+        console.error("[Webhook] Error processing event:", err.message);
         return NextResponse.json(
-            { error: "Webhook handler failed" },
+            { error: "Webhook handler failed", details: err.message },
             { status: 500 }
         );
     }
