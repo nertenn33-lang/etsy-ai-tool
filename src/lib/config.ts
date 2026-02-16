@@ -2,8 +2,7 @@
  * When true, app runs in landing-only mode: / shows landing, checkout returns 503, no DB required.
  * Set LANDING_MODE=true and NEXT_PUBLIC_LANDING_MODE=true in Vercel for SEO/lead capture deploys.
  */
-export const LANDING_MODE =
-  process.env.LANDING_MODE?.trim()?.toLowerCase() === "true";
+export const LANDING_MODE = false; // Forced to false to open the shop
 
 /**
  * Feature and app config.

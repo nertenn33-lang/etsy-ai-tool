@@ -13,13 +13,6 @@ export async function POST(request: Request) {
   try {
     const { uid, cookieValueToSet } = await getOrCreateUid();
 
-    if (LANDING_MODE) {
-      return NextResponse.json(
-        { error: "Payments status: Waitlist only." },
-        { status: 503 }
-      );
-    }
-
     // Strictly trim Price ID
     const priceId = (process.env.STRIPE_PRICE_ID || "").trim();
     if (!priceId) {
