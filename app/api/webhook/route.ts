@@ -3,12 +3,7 @@ import { stripe } from "@/src/lib/stripe";
 import { prisma } from "@/src/lib/prisma";
 import Stripe from "stripe";
 
-// Disable body parsing for webhook verification
-export const config = {
-    api: {
-        bodyParser: false,
-    },
-};
+// Disable body parsing logic is handled automatically in App Router by using req.text() or req.json()
 
 export async function POST(req: Request) {
     const body = await req.text();
