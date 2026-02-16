@@ -133,9 +133,8 @@ export async function POST(request: Request) {
     }
     return response;
   } catch (err: any) {
-    console.error("[POST /api/checkout] CRITICAL ERROR:", err);
-    console.error("[POST /api/checkout] Error Message:", err.message);
-    console.error("[POST /api/checkout] Error Stack:", err.stack);
+    console.error('[STRIPE_ERROR]:', err.message);
+    console.error("[POST /api/checkout] Full Error Context:", err);
     return NextResponse.json(
       { error: "Checkout failed", details: err.message },
       { status: 500 },
