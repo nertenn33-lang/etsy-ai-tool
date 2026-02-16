@@ -3,7 +3,7 @@ import { POPULAR_NICHES } from '@/src/lib/nicheData';
 import { APP_URL } from '@/src/lib/config';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-    const baseUrl = APP_URL || 'https://rankonetsy.com';
+    const baseUrl = 'https://www.rankonetsy.com';
 
     const nicheUrls = POPULAR_NICHES.map((niche) => ({
         url: `${baseUrl}/trends/${niche.slug}`,

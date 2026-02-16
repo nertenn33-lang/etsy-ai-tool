@@ -106,8 +106,8 @@ export async function POST(request: Request) {
           },
         },
       ],
-      success_url: `${appUrl}/?checkout=success`,
-      cancel_url: `${appUrl}/?checkout=cancel`,
+      success_url: `https://www.rankonetsy.com/?checkout=success`,
+      cancel_url: `https://www.rankonetsy.com/?checkout=cancel`,
       client_reference_id: uid,
       metadata: { uid, userId: uid, creditsToAdd: "3" }, // Added userId
     });
