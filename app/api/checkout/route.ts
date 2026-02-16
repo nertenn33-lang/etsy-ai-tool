@@ -3,7 +3,7 @@
  * TEST: Stripe checkout metadata uid + creditsToAdd geliyor
  */
 import { NextResponse } from "next/server";
-import Stripe from "stripe";
+import { stripe } from "@/src/lib/stripe";
 import { getOrCreateUid, uidCookieOptions } from "@/src/lib/uid";
 import {
   LANDING_MODE,
@@ -90,17 +90,26 @@ export async function POST(request: Request) {
       );
     }
 
-    const secret = process.env.STRIPE_SECRET_KEY!;
-    const stripe = new Stripe(secret);
+    // Stripe client is imported from @/src/lib/stripe
+
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       line_items: [
-        { quantity: 1, price: process.env.STRIPE_PRICE_ID! },
+        {
+          quantity: 1,
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: "3 Credits Pack",
+            },
+            unit_amount: 999,
+          },
+        },
       ],
       success_url: `${appUrl}/?checkout=success`,
       cancel_url: `${appUrl}/?checkout=cancel`,
       client_reference_id: uid,
-      metadata: { uid, creditsToAdd: "3" },
+      metadata: { uid, userId: uid, creditsToAdd: "3" }, // Added userId
     });
 
     const response = NextResponse.json(

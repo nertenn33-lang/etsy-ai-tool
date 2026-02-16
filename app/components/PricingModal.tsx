@@ -77,7 +77,7 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
 
                     <ul className="space-y-3 mb-6">
                         {[
-                            "5 Deep Market Analysis Credits",
+                            "3 Premium Credits",
                             "Competitor Sales Data",
                             "Keyword Search Volume History",
                             "Future Trend Predictions"
