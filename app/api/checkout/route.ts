@@ -99,6 +99,9 @@ export async function POST(request: Request) {
     console.log(`[Checkout Debug] STRIPE_PRICE_ID exists: ${!!priceId}, Value: ${priceId}`);
     console.log(`[Checkout Debug] UID: ${uid}`);
 
+    const { origin } = new URL(request.url);
+    console.log(`[Checkout Debug] Origin detected: ${origin}`);
+
     // Stripe client is imported from @/src/lib/stripe
 
     console.log("[Checkout Debug] Creating session...");
@@ -116,8 +119,8 @@ export async function POST(request: Request) {
           },
         },
       ],
-      success_url: `https://www.rankonetsy.com/?checkout=success`,
-      cancel_url: `https://www.rankonetsy.com/?checkout=cancel`,
+      success_url: `${origin}/?checkout=success`,
+      cancel_url: `${origin}/?checkout=cancel`,
       client_reference_id: uid,
       metadata: { uid, userId: uid, creditsToAdd: "3" }, // Added userId
     });
@@ -136,7 +139,7 @@ export async function POST(request: Request) {
     console.error('[STRIPE_ERROR]:', err.message);
     console.error("[POST /api/checkout] Full Error Context:", err);
     return NextResponse.json(
-      { error: "Checkout failed", details: err.message },
+      { error: err.message }, // Return raw error message to client for debugging
       { status: 500 },
     );
   }
