@@ -39,22 +39,21 @@ export async function POST(req: Request) {
         if (event.type === "checkout.session.completed") {
             const session = event.data.object as Stripe.Checkout.Session;
 
-            // Extract identifier. Metadata or client_reference_id
-            // Note: We use the 'id' field in Prisma as per schema.
+            // PRIORITISED ID LOGIC: client_reference_id first, then metadata.userId
             const userId = session.client_reference_id || session.metadata?.userId || session.metadata?.uid;
 
-            // Expected 3 credits + ensure specific Number(3) logic as requested
-            const creditsToAdd = Number(3);
+            // GUARANTEED CREDIT LOGIC: Number(creditsToAdd || 3)
+            const creditsToAdd = Number(session.metadata?.creditsToAdd || 3);
 
             if (userId) {
                 console.log(`[Webhook] Processing success for user: ${userId}, credits: ${creditsToAdd}`);
 
-                // We use increment. If user doesn't exist, we create them with 3+1 (bonus).
+                // We use upsert to be safe, but targeting the logic requested: update credits by incrementing 3
                 await prisma.user.upsert({
                     where: { id: userId },
                     create: {
                         id: userId,
-                        credits: creditsToAdd + 1, // 3 + 1 Free Credit
+                        credits: creditsToAdd + 1, // Sign-up bonus + purchase
                     },
                     update: {
                         credits: {
@@ -64,7 +63,7 @@ export async function POST(req: Request) {
                 });
                 console.log(`[Webhook] Successfully updated credits for ${userId}`);
             } else {
-                console.error("[Webhook] ERROR: No identifier (uid/userId/client_reference_id) found in session.");
+                console.error("[Webhook] ERROR: No identifier (client_reference_id or userId) found in session metadata.", session.id);
             }
         }
 
