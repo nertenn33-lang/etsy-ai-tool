@@ -47,13 +47,20 @@ function logCheckoutEnvOnce() {
 }
 
 export async function POST(request: Request) {
+  console.time("[Checkout Total Time]");
   try {
+    console.log("[Checkout Agent] Method: POST, Timestamp:", new Date().toISOString());
+
     // UID is server-authoritative only: from cookie via getOrCreateUid(). Do not accept uid from client body.
+    console.time("[UID Fetch]");
     const { uid, cookieValueToSet } = await getOrCreateUid();
+    console.timeEnd("[UID Fetch]");
+    console.log(`[Checkout Agent] UID: ${uid}`);
 
     logCheckoutEnvOnce();
 
     if (LANDING_MODE) {
+      console.warn("[Checkout Agent] LANDING_MODE is ON. Rejecting.");
       const response = NextResponse.json(
         { error: "Payments temporarily offline. Join the waitlist to be notified when we're back." },
         { status: 503 }
@@ -65,6 +72,7 @@ export async function POST(request: Request) {
     }
 
     if (!isStripeEnabled()) {
+      console.warn("[Checkout Agent] Stripe is DISABLED in config.");
       const message =
         process.env.NODE_ENV === "production"
           ? "Stripe disabled."
@@ -78,33 +86,27 @@ export async function POST(request: Request) {
 
     const config = validateStripeConfig();
     if (!config.ok) {
+      console.error("[Checkout Agent] Config Validation FAILED:", config.message);
       return NextResponse.json({ error: config.message }, { status: 500 });
     }
 
-    const appUrl = getAppUrlForStripe();
-    if (!appUrl) {
-      console.warn("[checkout] NEXT_PUBLIC_APP_URL / APP_URL not set; redirect URLs may fail");
-      return NextResponse.json(
-        { error: "Missing NEXT_PUBLIC_APP_URL (required for checkout redirect URLs)" },
-        { status: 500 },
-      );
+    // Verify environment variables (trimmed)
+    const strKey = (process.env.STRIPE_SECRET_KEY || "").trim();
+    const priceId = (process.env.STRIPE_PRICE_ID || "").trim();
+
+    console.log("[Checkout Agent] Verifying Stripe Object...");
+    console.log(`[Checkout Agent] stripe instance type: ${typeof stripe}`);
+    console.log(`[Checkout Agent] stripe.checkout type: ${typeof stripe?.checkout}`);
+
+    if (!stripe || !stripe.checkout) {
+      throw new Error("Stripe library failed to initialize correctly. stripe or stripe.checkout is undefined.");
     }
 
-    // Verify environment variables
-    const strKey = process.env.STRIPE_SECRET_KEY;
-    const priceId = process.env.STRIPE_PRICE_ID;
-
-    console.log("[Checkout Debug] Checking credentials...");
-    console.log(`[Checkout Debug] STRIPE_SECRET_KEY exists: ${!!strKey}, Length: ${strKey?.length}`);
-    console.log(`[Checkout Debug] STRIPE_PRICE_ID exists: ${!!priceId}, Value: ${priceId}`);
-    console.log(`[Checkout Debug] UID: ${uid}`);
-
     const { origin } = new URL(request.url);
-    console.log(`[Checkout Debug] Origin detected: ${origin}`);
+    console.log(`[Checkout Agent] Origin detected: ${origin}`);
 
-    // Stripe client is imported from @/src/lib/stripe
-
-    console.log("[Checkout Debug] Creating session...");
+    console.log("[Checkout Agent] Starting Stripe Session Creation...");
+    console.time("[Stripe API Call]");
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       line_items: [
@@ -124,8 +126,10 @@ export async function POST(request: Request) {
       client_reference_id: uid,
       metadata: { uid, userId: uid, creditsToAdd: "3" }, // Added userId
     });
+    console.timeEnd("[Stripe API Call]");
 
-    console.log("[Checkout Debug] Session created:", session.id);
+    console.log("[Checkout Agent] Session created successfully. ID:", session.id);
+    console.log("[Checkout Agent] Session URL:", session.url ? "Exists" : "MISSING");
 
     const response = NextResponse.json(
       { url: session.url ?? undefined },
@@ -134,15 +138,19 @@ export async function POST(request: Request) {
     if (cookieValueToSet) {
       response.cookies.set("uid", cookieValueToSet, uidCookieOptions);
     }
+    console.timeEnd("[Checkout Total Time]");
     return response;
   } catch (err: any) {
+    try { console.timeEnd("[Stripe API Call]"); } catch { }
+    try { console.timeEnd("[Checkout Total Time]"); } catch { }
+
     console.error('[STRIPE_ERROR]:', err.message);
-    console.error("[POST /api/checkout] Full Error Context:", err);
+    console.error("[Checkout Agent] Full Error Context:", err);
+    console.error("[Checkout Agent] Error Stack:", err.stack);
+
     return NextResponse.json(
       { error: err.message }, // Return raw error message to client for debugging
       { status: 500 },
     );
   }
 }
-
-// REDEPLOY: Force update for Stripe logging logic
