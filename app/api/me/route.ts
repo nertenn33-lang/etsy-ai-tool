@@ -11,7 +11,7 @@ export async function GET() {
     const user = await prisma.user.upsert({
       where: { id: uid },
 
-      create: { id: uid },
+      create: { id: uid, credits: 1 }, // Manual override: 1 Free Credit
       update: {},
     });
 

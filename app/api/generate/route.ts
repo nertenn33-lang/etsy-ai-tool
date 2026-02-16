@@ -52,7 +52,7 @@ export async function POST(request: Request) {
 
     await prisma.user.upsert({
       where: { id: uid },
-      create: { id: uid, credits: 0 },
+      create: { id: uid, credits: 1 }, // Manual override: 1 Free Credit
       update: {},
     });
 

@@ -90,8 +90,18 @@ export async function POST(request: Request) {
       );
     }
 
+    // Verify environment variables
+    const strKey = process.env.STRIPE_SECRET_KEY;
+    const priceId = process.env.STRIPE_PRICE_ID;
+
+    console.log("[Checkout Debug] Checking credentials...");
+    console.log(`[Checkout Debug] STRIPE_SECRET_KEY exists: ${!!strKey}, Length: ${strKey?.length}`);
+    console.log(`[Checkout Debug] STRIPE_PRICE_ID exists: ${!!priceId}, Value: ${priceId}`);
+    console.log(`[Checkout Debug] UID: ${uid}`);
+
     // Stripe client is imported from @/src/lib/stripe
 
+    console.log("[Checkout Debug] Creating session...");
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       line_items: [
@@ -112,6 +122,8 @@ export async function POST(request: Request) {
       metadata: { uid, userId: uid, creditsToAdd: "3" }, // Added userId
     });
 
+    console.log("[Checkout Debug] Session created:", session.id);
+
     const response = NextResponse.json(
       { url: session.url ?? undefined },
       { status: 200 },
@@ -120,10 +132,12 @@ export async function POST(request: Request) {
       response.cookies.set("uid", cookieValueToSet, uidCookieOptions);
     }
     return response;
-  } catch (err) {
-    console.error("[POST /api/checkout]", err);
+  } catch (err: any) {
+    console.error("[POST /api/checkout] CRITICAL ERROR:", err);
+    console.error("[POST /api/checkout] Error Message:", err.message);
+    console.error("[POST /api/checkout] Error Stack:", err.stack);
     return NextResponse.json(
-      { error: "Checkout failed" },
+      { error: "Checkout failed", details: err.message },
       { status: 500 },
     );
   }
