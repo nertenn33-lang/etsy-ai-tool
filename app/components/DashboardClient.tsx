@@ -39,7 +39,7 @@ export default function DashboardClient({ initialKeyword = "", initialData, read
     const [keyword, setKeyword] = useState(initialKeyword);
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState<EtsyTrendData | null>(initialData || null);
-    const [credits, setCredits] = useState(3);
+    const [credits, setCredits] = useState(0);
     const [showPricing, setShowPricing] = useState(false);
 
     async function handleAnalyze(e: React.FormEvent) {
