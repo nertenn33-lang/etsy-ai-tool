@@ -9,8 +9,10 @@ export async function POST(req: Request) {
     const body = await req.text();
     const signature = req.headers.get("stripe-signature") as string;
 
-    if (!process.env.STRIPE_WEBHOOK_SECRET) {
-        console.error("Missing STRIPE_WEBHOOK_SECRET");
+    const webhookSecret = (process.env.STRIPE_WEBHOOK_SECRET || "").trim();
+
+    if (!webhookSecret) {
+        console.error("[Webhook] CRITICAL: Missing STRIPE_WEBHOOK_SECRET");
         return NextResponse.json(
             { error: "Server misconfiguration" },
             { status: 500 }
@@ -23,30 +25,34 @@ export async function POST(req: Request) {
         event = stripe.webhooks.constructEvent(
             body,
             signature,
-            process.env.STRIPE_WEBHOOK_SECRET
+            webhookSecret
         );
-    } catch (err) {
-        console.error("Webhook signature verification failed:", err);
+    } catch (err: any) {
+        console.error(`[Webhook] Signature verification failed: ${err.message}`);
         return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
     }
 
     try {
+        console.log(`[Webhook] Event Received: ${event.type}`);
+
         if (event.type === "checkout.session.completed") {
             const session = event.data.object as Stripe.Checkout.Session;
 
-            // Extract userId from metadata
-            const userId = session.metadata?.userId || session.metadata?.uid;
-            // Force 3 credits as per business logic
-            const creditsToAdd = 3;
+            // Extract uid/userId. Metadata or client_reference_id
+            const userId = session.client_reference_id || session.metadata?.userId || session.metadata?.uid;
 
-            if (userId && creditsToAdd > 0) {
-                console.log(`[Webhook] Adding ${creditsToAdd} credits to user ${userId}`);
+            // Expected 3 credits
+            const creditsToAdd = parseInt(session.metadata?.creditsToAdd || "3", 10);
 
+            if (userId) {
+                console.log(`[Webhook] Processing success for user: ${userId}, credits: ${creditsToAdd}`);
+
+                // We use increment to be safe. If user doesn't exist (unlikely), we create them with 3+1 (bonus).
                 await prisma.user.upsert({
                     where: { id: userId },
                     create: {
                         id: userId,
-                        credits: creditsToAdd + 3, // Sign-up bonus + purchase
+                        credits: creditsToAdd + 1, // 3 + 1 Free Credit
                     },
                     update: {
                         credits: {
@@ -54,8 +60,9 @@ export async function POST(req: Request) {
                         },
                     },
                 });
+                console.log(`[Webhook] Successfully updated credits for ${userId}`);
             } else {
-                console.warn("[Webhook] Missing userId or creditsToAdd in metadata", session.metadata);
+                console.error("[Webhook] ERROR: No userId found in session metadata or client_reference_id.", session.id);
             }
         }
 
