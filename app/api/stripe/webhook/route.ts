@@ -4,10 +4,11 @@
  */
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { getPrisma } from "@/src/lib/prisma";
+import { prisma } from "@/src/lib/prisma";
 import { STRIPE_ENABLED } from "@/src/lib/config";
 
 export const runtime = "nodejs";
+
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
@@ -102,7 +103,7 @@ async function handleWebhook(request: Request) {
 
   const creditsToAdd = Number(session.metadata?.creditsToAdd ?? 3) || 3;
 
-  const prisma = getPrisma();
+
   const already = await prisma.stripeEvent.findUnique({
     where: { id: event.id },
   });

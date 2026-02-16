@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server";
 import { getOrCreateUid, uidCookieOptions } from "@/src/lib/uid";
-import { getPrisma } from "@/src/lib/prisma";
+import { prisma } from "@/src/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const prisma = getPrisma();
     const { uid, cookieValueToSet } = await getOrCreateUid();
 
     const user = await prisma.user.upsert({
       where: { id: uid },
+
       create: { id: uid },
       update: {},
     });
