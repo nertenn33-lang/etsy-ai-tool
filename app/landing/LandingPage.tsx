@@ -77,7 +77,7 @@ export default function LandingPage() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
             <Link
-              href="/analyze"
+              href="/app"
               className="group relative inline-flex items-center gap-2 rounded-full bg-white px-8 py-4 text-slate-950 font-bold transition-all hover:scale-105 hover:bg-slate-200"
             >
               Start analyzing for free
@@ -162,25 +162,22 @@ export default function LandingPage() {
             Pay only for what you need. Credits never expire.
           </p>
 
-          <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 max-w-2xl mx-auto">
-            <div className="rounded-xl bg-white/5 border border-white/10 p-6 flex flex-col items-center hover:bg-white/10 transition-colors">
-              <span className="text-sm font-medium text-slate-300">Starter</span>
+          <div className="mt-8 flex justify-center max-w-2xl mx-auto">
+            <div className="rounded-xl bg-white/5 border border-white/10 p-6 flex flex-col items-center hover:bg-white/10 transition-colors w-full max-w-sm">
+              <span className="text-sm font-medium text-slate-300">Starter Pack</span>
               <span className="text-3xl font-bold text-white mt-2">$9.99</span>
-              <span className="text-xs text-slate-500 mt-1">5 Credits</span>
-              <ul className="mt-4 space-y-2 text-sm text-slate-400 text-left w-full">
-                <li className="flex items-center"><Check className="w-4 h-4 mr-2 text-emerald-500" /> Full Market Analysis</li>
-                <li className="flex items-center"><Check className="w-4 h-4 mr-2 text-emerald-500" /> SEO Tag Generator</li>
+              <span className="text-xs text-slate-500 mt-1">3 Premium Credits</span>
+              <ul className="mt-4 space-y-2 text-sm text-slate-400 text-left w-full px-4">
+                <li className="flex items-center"><Check className="w-4 h-4 mr-2 text-emerald-500" /> Deep Analysis</li>
+                <li className="flex items-center"><Check className="w-4 h-4 mr-2 text-emerald-500" /> Competitor Spy</li>
+                <li className="flex items-center"><Check className="w-4 h-4 mr-2 text-emerald-500" /> Sales Estimates</li>
               </ul>
-            </div>
-            <div className="rounded-xl bg-gradient-to-b from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 p-6 flex flex-col items-center relative overflow-hidden">
-              <div className="absolute top-0 right-0 bg-indigo-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg">POPULAR</div>
-              <span className="text-sm font-medium text-indigo-300">Pro</span>
-              <span className="text-3xl font-bold text-white mt-2">$29.99</span>
-              <span className="text-xs text-indigo-200 mt-1">20 Credits</span>
-              <ul className="mt-4 space-y-2 text-sm text-slate-300 text-left w-full">
-                <li className="flex items-center"><Check className="w-4 h-4 mr-2 text-indigo-400" /> Best Value</li>
-                <li className="flex items-center"><Check className="w-4 h-4 mr-2 text-indigo-400" /> Priority Support</li>
-              </ul>
+              <Link
+                href="/app"
+                className="mt-6 w-full rounded-lg bg-indigo-600 py-2 text-center text-sm font-semibold text-white hover:bg-indigo-500"
+              >
+                Get Started
+              </Link>
             </div>
           </div>
         </section>
@@ -200,37 +197,6 @@ export default function LandingPage() {
           </dl>
         </section>
 
-        {/* Email capture — waitlist */}
-        <section id="waitlist" className={`${GLASS_CARD} p-6 sm:p-8 space-y-4`}>
-          <h2 className="text-lg font-semibold text-white text-center">Join the waitlist</h2>
-          <p className="text-sm text-slate-400 text-center max-w-md mx-auto">
-            Be the first to know when we launch. No spam — just one email when we&apos;re ready.
-          </p>
-          <form onSubmit={handleWaitlistSubmit} className="max-w-sm mx-auto space-y-3">
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              required
-              disabled={waitlistStatus === "loading"}
-              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/30 disabled:opacity-60"
-            />
-            <button
-              type="submit"
-              disabled={waitlistStatus === "loading"}
-              className="w-full rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 px-4 py-3 text-sm font-medium text-white shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/30 disabled:opacity-70 transition-all"
-            >
-              {waitlistStatus === "loading" ? "Sending…" : waitlistStatus === "success" ? "You're on the list ✓" : "Notify me"}
-            </button>
-            {waitlistStatus === "success" && (
-              <p className="text-sm text-emerald-400 text-center">Thanks! We&apos;ll email you when we launch.</p>
-            )}
-            {waitlistStatus === "error" && waitlistError && (
-              <p className="text-sm text-rose-400 text-center">{waitlistError}</p>
-            )}
-          </form>
-        </section>
 
         <footer className="flex flex-col sm:flex-row items-center justify-between gap-4 py-6 border-t border-white/10">
           <p className="text-xs text-zinc-500">© {new Date().getFullYear()} RankOnEtsy</p>

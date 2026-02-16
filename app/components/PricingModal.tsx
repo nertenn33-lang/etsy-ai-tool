@@ -78,9 +78,9 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
                     <ul className="space-y-3 mb-6">
                         {[
                             "3 Premium Credits",
-                            "Competitor Sales Data",
-                            "Keyword Search Volume History",
-                            "Future Trend Predictions"
+                            "Deep Analysis",
+                            "Competitor Spy",
+                            "Sales Estimates"
                         ].map((item, i) => (
                             <li key={i} className="flex items-start gap-3 text-sm text-slate-300">
                                 <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
