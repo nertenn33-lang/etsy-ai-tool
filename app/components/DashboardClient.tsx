@@ -24,6 +24,7 @@ import { motion } from "framer-motion";
 
 import { getSimulatedEtsyData, type EtsyTrendData } from "@/src/lib/etsyDataEngine";
 import PricingModal from "./PricingModal";
+import ActionPlan from "./ActionPlan";
 
 const GLASS_CARD = "relative overflow-hidden rounded-2xl border border-white/10 bg-slate-900/40 backdrop-blur-xl p-6";
 
@@ -340,7 +341,17 @@ export default function DashboardClient({ initialKeyword = "", initialData, read
                                 </div>
                             </motion.div>
 
+
                         </div>
+
+                        {/* AI Action Plan */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.9 }}
+                        >
+                            <ActionPlan data={data} />
+                        </motion.div>
                     </motion.div>
                 )}
 
