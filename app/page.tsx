@@ -1,8 +1,5 @@
-import LandingPage from "@/app/landing/LandingPage";
+import DashboardClient from "@/app/components/DashboardClient";
 
-/**
- * When LANDING_MODE=true, show landing-only page (no DB/Stripe). Else show full app.
- */
 export default function Page() {
-  return <LandingPage />;
+  return <DashboardClient />;
 }

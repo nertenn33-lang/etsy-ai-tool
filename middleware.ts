@@ -5,14 +5,8 @@ export function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
     // 1. Redirect root / to /app if user has 'uid' cookie (Returning User)
-    if (pathname === "/") {
-        const uid = request.cookies.get("uid");
-        // Only redirect if LANDING_MODE is NOT forced (it is false now in config, check env if dynamic)
-        // But since we want to "Open Shop", we assume we want them in the app.
-        if (uid) {
-            return NextResponse.redirect(new URL("/app", request.url));
-        }
-    }
+    // No-Auth Mode: We want everyone on / (which is now the app).
+    // if (pathname === "/") { ... } -> Removed.
 
     return NextResponse.next();
 }

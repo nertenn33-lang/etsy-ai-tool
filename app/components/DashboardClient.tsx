@@ -42,6 +42,11 @@ export default function DashboardClient({ initialKeyword = "", initialData, read
     const [credits, setCredits] = useState(1);
     const [showPricing, setShowPricing] = useState(false);
 
+    // Restore Modal State
+    const [showRestore, setShowRestore] = useState(false);
+    const [restoreEmail, setRestoreEmail] = useState("");
+    const [restoreStatus, setRestoreStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+
     async function handleAnalyze(e: React.FormEvent) {
         e.preventDefault();
         if (readOnly) return; // Disable search in read-only mode
@@ -388,6 +393,72 @@ export default function DashboardClient({ initialKeyword = "", initialData, read
                 )}
 
             </main>
+            {/* Restore Modal */}
+            {showRestore && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+                    <div className="w-full max-w-md bg-slate-900 rounded-xl border border-white/10 p-6 shadow-2xl">
+                        <h3 className="text-xl font-bold text-white mb-2">Restore Purchases</h3>
+                        <p className="text-slate-400 text-sm mb-6">
+                            Enter the email you used on Stripe to recover your credits.
+                        </p>
+
+                        <div className="space-y-4">
+                            <input
+                                type="email"
+                                placeholder="name@example.com"
+                                value={restoreEmail}
+                                onChange={(e) => setRestoreEmail(e.target.value)}
+                                className="w-full rounded-lg bg-slate-800 border border-white/10 px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                            />
+
+                            {restoreStatus === "error" && (
+                                <p className="text-red-400 text-sm">No purchase found for this email.</p>
+                            )}
+                            {restoreStatus === "success" && (
+                                <p className="text-emerald-400 text-sm">Restored! Reloading...</p>
+                            )}
+
+                            <div className="flex gap-3 pt-2">
+                                <button
+                                    onClick={() => {
+                                        setShowRestore(false);
+                                        setRestoreStatus("idle");
+                                        setRestoreEmail("");
+                                    }}
+                                    className="flex-1 px-4 py-2 text-sm font-medium text-slate-400 hover:text-white bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={async () => {
+                                        if (!restoreEmail) return;
+                                        setRestoreStatus("loading");
+                                        try {
+                                            const res = await fetch("/api/restore", {
+                                                method: "POST",
+                                                headers: { "Content-Type": "application/json" },
+                                                body: JSON.stringify({ email: restoreEmail }),
+                                            });
+                                            if (res.ok) {
+                                                setRestoreStatus("success");
+                                                setTimeout(() => window.location.reload(), 1000);
+                                            } else {
+                                                setRestoreStatus("error");
+                                            }
+                                        } catch (e) {
+                                            setRestoreStatus("error");
+                                        }
+                                    }}
+                                    disabled={restoreStatus === "loading" || restoreStatus === "success"}
+                                    className="flex-1 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 transition-colors disabled:opacity-50"
+                                >
+                                    {restoreStatus === "loading" ? "Checking..." : "Restore"}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
