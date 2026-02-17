@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     Search,
     TrendingUp,
@@ -46,6 +46,14 @@ export default function DashboardClient({ initialKeyword = "", initialData, read
     const [showRestore, setShowRestore] = useState(false);
     const [restoreEmail, setRestoreEmail] = useState("");
     const [restoreStatus, setRestoreStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+
+
+    useEffect(() => {
+        const savedCredits = localStorage.getItem("user_credits");
+        if (savedCredits) {
+            setCredits(parseInt(savedCredits, 10));
+        }
+    }, []);
 
     async function handleAnalyze(e: React.FormEvent) {
         e.preventDefault();
@@ -99,18 +107,13 @@ export default function DashboardClient({ initialKeyword = "", initialData, read
                             </button>
                         )}
 
-                        {/* Auth Button */}
-                        <a
-                            href="/login"
+                        {/* Restore Button */}
+                        <button
+                            onClick={() => setShowRestore(true)}
                             className="flex items-center gap-2 text-sm font-medium text-slate-300 hover:text-white transition-colors bg-white/5 hover:bg-white/10 px-4 py-2 rounded-lg border border-white/5"
                         >
-                            <span>Sign In</span>
-                        </a>
-
-                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 border border-white/10 shadow-inner overflow-hidden">
-                            {/* Placeholder Avatar */}
-                            <div className="w-full h-full flex items-center justify-center text-xs font-bold text-slate-500">?</div>
-                        </div>
+                            <span>Restore Credits</span>
+                        </button>
                     </div>
                 </div>
             </nav>
@@ -440,8 +443,14 @@ export default function DashboardClient({ initialKeyword = "", initialData, read
                                                 body: JSON.stringify({ email: restoreEmail }),
                                             });
                                             if (res.ok) {
+                                                const data = await res.json();
                                                 setRestoreStatus("success");
-                                                setTimeout(() => window.location.reload(), 1000);
+                                                setCredits(data.credits);
+                                                localStorage.setItem("user_credits", data.credits.toString());
+                                                setTimeout(() => {
+                                                    setShowRestore(false);
+                                                    setRestoreStatus("idle");
+                                                }, 1500);
                                             } else {
                                                 setRestoreStatus("error");
                                             }
