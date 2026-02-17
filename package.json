@@ -13,7 +13,6 @@
     "stripe:webhook-dev": "node scripts/sync-stripe-webhook-secret.mjs 3000"
   },
   "dependencies": {
-    "@auth/prisma-adapter": "^2.11.1",
     "@prisma/adapter-pg": "^7.3.0",
     "@prisma/client": "^7.3.0",
     "@vercel/analytics": "^1.6.1",
@@ -22,7 +21,6 @@
     "framer-motion": "^12.34.0",
     "lucide-react": "^0.564.0",
     "next": "16.1.6",
-    "next-auth": "^5.0.0-beta.30",
     "pg": "^8.13.0",
     "posthog-js": "^1.347.0",
     "react": "19.2.3",
