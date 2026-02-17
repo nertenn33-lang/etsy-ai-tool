@@ -13,6 +13,22 @@ export async function POST(request: Request) {
   try {
     const { uid, cookieValueToSet } = await getOrCreateUid();
 
+    // Check for authenticated user session first
+    // import { auth } from "@/auth" needs to be added at top, but this is a route handler
+    // We can import it dynamically or at top level.
+    // Let's rely on standard NextAuth auth() call.
+    let userId = uid;
+    try {
+      const { auth } = await import("@/auth");
+      const session = await auth();
+      if (session?.user?.id) {
+        userId = session.user.id;
+        console.log(`[Checkout] Authenticated user detected: ${userId}`);
+      }
+    } catch (e) {
+      console.warn("[Checkout] Auth check failed, using anonymous uid", e);
+    }
+
     // Strictly trim Price ID
     const priceId = (process.env.STRIPE_PRICE_ID || "").trim();
     if (!priceId) {
@@ -38,8 +54,8 @@ export async function POST(request: Request) {
       ],
       success_url: `${origin}/?checkout=success`,
       cancel_url: `${origin}/?checkout=cancel`,
-      client_reference_id: uid,
-      metadata: { uid, userId: uid, creditsToAdd: "3" },
+      client_reference_id: userId,
+      metadata: { uid, userId, creditsToAdd: "3" },
     });
 
     const response = NextResponse.json(

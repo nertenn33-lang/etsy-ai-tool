@@ -42,6 +42,28 @@ export default function DashboardClient({ initialKeyword = "", initialData, read
     const [credits, setCredits] = useState(1);
     const [showPricing, setShowPricing] = useState(false);
 
+    async function handleAnalyze(e: React.FormEvent) {
+        e.preventDefault();
+        if (readOnly) return; // Disable search in read-only mode
+        if (!keyword.trim()) return;
+
+        if (credits <= 0) {
+            setShowPricing(true);
+            return;
+        }
+
+        setLoading(true);
+        setData(null);
+
+        try {
+            const result = await getSimulatedEtsyData(keyword);
+            setData(result);
+            setCredits(prev => Math.max(0, prev - 1));
+        } finally {
+            setLoading(false);
+        }
+    }
+
     // Auth State (Mocked for now until we fully wire client session)
     // In real implementation, we would use useSession() from next-auth/react
     // For now, we will add the UI element that links to /login
