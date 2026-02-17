@@ -49,16 +49,23 @@ export async function POST(req: Request) {
                 console.log(`[Webhook] Processing success for user: ${userId}, credits: ${creditsToAdd}`);
 
                 // We use upsert to be safe, but targeting the logic requested: update credits by incrementing 3
+                const customerDetails = session.customer_details;
+                const customerEmail = customerDetails?.email;
+
                 await prisma.user.upsert({
                     where: { id: userId },
                     create: {
                         id: userId,
                         credits: creditsToAdd + 1, // Sign-up bonus + purchase
+                        email: customerEmail || undefined, // Capture email if new user
                     },
                     update: {
                         credits: {
                             increment: creditsToAdd,
                         },
+                        // If user has no email yet (anonymous), link this paying email to them!
+                        // This enables the "Link Stripe Email" flow.
+                        email: customerEmail ? customerEmail : undefined,
                     },
                 });
                 console.log(`[Webhook] Successfully updated credits for ${userId}`);
