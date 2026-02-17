@@ -42,28 +42,9 @@ export default function DashboardClient({ initialKeyword = "", initialData, read
     const [credits, setCredits] = useState(1);
     const [showPricing, setShowPricing] = useState(false);
 
-    async function handleAnalyze(e: React.FormEvent) {
-        e.preventDefault();
-        if (readOnly) return; // Disable search in read-only mode
-        if (!keyword.trim()) return;
-
-        if (credits <= 0) {
-            setShowPricing(true);
-            return;
-        }
-
-        setLoading(true);
-        setData(null);
-
-        try {
-            const result = await getSimulatedEtsyData(keyword);
-            setData(result);
-            setCredits(prev => Math.max(0, prev - 1));
-        } finally {
-            setLoading(false);
-        }
-    }
-
+    // Auth State (Mocked for now until we fully wire client session)
+    // In real implementation, we would use useSession() from next-auth/react
+    // For now, we will add the UI element that links to /login
 
     return (
         <div className="min-h-screen text-slate-100 font-sans selection:bg-indigo-500/30 overflow-x-hidden">
@@ -78,8 +59,8 @@ export default function DashboardClient({ initialKeyword = "", initialData, read
                         <span className="font-bold text-xl tracking-tight text-white">SEO Command Center</span>
                     </div>
 
-                    {!readOnly ? (
-                        <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-4">
+                        {!readOnly && (
                             <button
                                 onClick={() => setShowPricing(true)}
                                 className="group flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/50 border border-white/10 hover:border-indigo-500/50 transition-all duration-300"
@@ -89,15 +70,21 @@ export default function DashboardClient({ initialKeyword = "", initialData, read
                                 {credits === 1 && <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">Free Trial</span>}
                                 {credits !== 1 && <span className="ml-2 text-[10px] text-indigo-300 bg-indigo-500/10 px-2 py-0.5 rounded-full uppercase font-bold tracking-wider border border-indigo-500/20">Add</span>}
                             </button>
-                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 border border-white/10 shadow-inner" />
+                        )}
+
+                        {/* Auth Button */}
+                        <a
+                            href="/login"
+                            className="flex items-center gap-2 text-sm font-medium text-slate-300 hover:text-white transition-colors bg-white/5 hover:bg-white/10 px-4 py-2 rounded-lg border border-white/5"
+                        >
+                            <span>Sign In</span>
+                        </a>
+
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 border border-white/10 shadow-inner overflow-hidden">
+                            {/* Placeholder Avatar */}
+                            <div className="w-full h-full flex items-center justify-center text-xs font-bold text-slate-500">?</div>
                         </div>
-                    ) : (
-                        <div className="flex items-center gap-4">
-                            <a href="/app" className="text-sm font-medium text-indigo-400 hover:text-indigo-300 transition-colors glow-hover px-4 py-2 rounded-lg">
-                                Login for Full Access
-                            </a>
-                        </div>
-                    )}
+                    </div>
                 </div>
             </nav>
 
