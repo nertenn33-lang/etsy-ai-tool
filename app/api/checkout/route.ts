@@ -14,7 +14,7 @@ export async function POST(request: Request) {
 
     // Lemon Squeezy Product URL
     // In a real app, you might want to fetch this from an env var or config
-    // Custom Domain Enabled (buy.rankonetsy.com)
+    // Verified Custom Domain (buy.rankonetsy.com)
     const baseUrl = "https://buy.rankonetsy.com/checkout/buy/37ce293d-bf78-454c-97cf-a4361405b1e7";
     const successUrl = "https://www.rankonetsy.com/app?success=true";
 
