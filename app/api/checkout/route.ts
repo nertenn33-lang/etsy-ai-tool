@@ -40,7 +40,7 @@ export async function POST(request: Request) {
           },
         },
       ],
-      success_url: `${origin}/?checkout=success`,
+      success_url: `${origin}/?success=true&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/?checkout=cancel`,
       client_reference_id: userId,
       metadata: { uid, userId, creditsToAdd: "3" },
