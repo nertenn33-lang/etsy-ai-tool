@@ -86,62 +86,19 @@ Response: `{ uid, idea, micro, listing: { title, tags, description, rationale, b
 
 When `creditsLeft` is 0, same request returns **402** with `{ "error": "No credits" }`.
 
-## Stripe Launch Switch
+## Lemon Squeezy Integration
 
-Stripe is **off by default**. When disabled, `/api/checkout` returns **501** `{ "error": "Stripe disabled" }` and the webhook does not add credits. Enable only when ready for launch.
+Payments are handled via Lemon Squeezy.
 
-**Env template:**
+**Environment Variables:**
+- `WEBHOOK_SECRET`: The signing secret from your Lemon Squeezy Webhook settings.
 
-```bash
-# Default: Stripe disabled (no buy, webhook no-op)
-STRIPE_ENABLED=false
-
-# Required when STRIPE_ENABLED=true (for success/cancel redirects)
-NEXT_PUBLIC_APP_URL=https://yourdomain.com
-# or APP_URL=https://yourdomain.com
-
-# Stripe keys (only used when STRIPE_ENABLED=true)
-STRIPE_SECRET_KEY=sk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-```
-
-**Launch day steps:**
-
-1. Set `STRIPE_ENABLED=true`.
-2. Set `NEXT_PUBLIC_APP_URL` (or `APP_URL`) to your production URL.
-3. Add webhook endpoint in Stripe Dashboard: `https://yourdomain.com/api/stripe/webhook`, event `checkout.session.completed`.
-4. Set `STRIPE_WEBHOOK_SECRET` to the signing secret from the Dashboard.
-5. Deploy.
-
-**UI:** When you add a “Buy Credits” button, call `GET /api/config` and use `stripeEnabled`. If `false`, show “Coming soon” or hide the button.
-
-## Stripe: purchase → +3 credits (when enabled)
-
-**Env:** See “Stripe Launch Switch” above. When `STRIPE_ENABLED=true` you need `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and `NEXT_PUBLIC_APP_URL` (or `APP_URL`).
-
-**Local webhook with Stripe CLI:**
-
-```bash
-# Terminal 1: forward webhooks to your app
-stripe listen --forward-to localhost:3000/api/stripe/webhook
-# Copy the signing secret (whsec_...) into .env as STRIPE_WEBHOOK_SECRET
-
-# Terminal 2: trigger a test "checkout.session.completed" (session has sample data; for real uid use a real checkout)
-stripe trigger checkout.session.completed
-```
-
-**Passing metadata (uid) with trigger:** The CLI trigger uses a fixture. To add `metadata.uid` for your test user, use a real checkout flow:
-
-1. `curl -X POST http://localhost:3000/api/checkout -b cookies.txt` (or open in browser with same cookie as /api/me).
-2. Open the returned `url` in the browser and pay with test card `4242 4242 4242 4242`.
-3. Stripe sends `checkout.session.completed` to your webhook; metadata includes the `uid` from step 1, and the user gets +3 credits.
-
-**Proof flow (curl):**
-
-- (a) Ensure user has 0 credits → `POST /api/generate` returns **402**.
-- (b) Run `stripe listen --forward-to localhost:3000/api/stripe/webhook`, then complete a checkout (or use trigger with a fixture that includes `metadata.uid`); user credits become 3.  
-  **Without Stripe CLI:** run `node scripts/simulate-stripe-webhook.js <uid>` (same `STRIPE_WEBHOOK_SECRET` in `.env`, dev server running). If the app runs on another port, use `PORT=3001 node scripts/simulate-stripe-webhook.js <uid>`. User credits become 3.
-- (c) `POST /api/generate` returns **200** and `creditsLeft: 2`.
+**Workflow:**
+1.  User clicks "Buy" -> Redirects to `buy.rankonetsy.com` (Lemon Squeezy Checkout).
+2.  URL includes `?checkout[custom][user_id]=UID` to bind the purchase to the user.
+3.  Lemon Squeezy sends a `POST` request to `/api/webhook/lemonsqueezy`.
+4.  Server verifies the signature using `WEBHOOK_SECRET`.
+5.  If event is `order_created`, user gets **+3 Credits**.
 
 ## Getting Started
 
