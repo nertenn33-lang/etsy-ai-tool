@@ -1,53 +1,23 @@
 /**
- * Create Stripe Checkout session with strictly trimmed credentials.
+ * Redirect to Lemon Squeezy Checkout with Custom Data
  */
 import { NextResponse } from "next/server";
-import { stripe } from "@/src/lib/stripe";
 import { getOrCreateUid, uidCookieOptions } from "@/src/lib/uid";
-import {
-  LANDING_MODE,
-  STRIPE_ENABLED,
-} from "@/src/lib/config";
 
 export async function POST(request: Request) {
   try {
     const { uid, cookieValueToSet } = await getOrCreateUid();
-
-    // No-Auth Mode: We rely on the `uid` cookie.
-    // If the user has restored their session via email, `uid` will point to their permanent ID.
     const userId = uid;
 
-    // Strictly trim Price ID
-    const priceId = (process.env.STRIPE_PRICE_ID || "").trim();
-    if (!priceId) {
-      return NextResponse.json({ error: "Configuration Error: Missing Price ID" }, { status: 500 });
-    }
+    // Lemon Squeezy Product URL
+    // In a real app, you might want to fetch this from an env var or config
+    const checkoutUrl = "https://buy.rankonetsy.com/buy/08ce9b6a-b949-494a-966e-5b7e98a53b02";
 
-    const { origin } = new URL(request.url);
-
-    // Create session
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      line_items: [
-        {
-          quantity: 1,
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: "3 Credits Pack",
-            },
-            unit_amount: 999,
-          },
-        },
-      ],
-      success_url: `${origin}/app?success=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/?checkout=cancel`,
-      client_reference_id: userId,
-      metadata: { uid, userId, creditsToAdd: "3" },
-    });
+    // Append custom data for session binding
+    const redirectUrl = `${checkoutUrl}?checkout[custom][user_id]=${userId}`;
 
     const response = NextResponse.json(
-      { url: session.url ?? undefined },
+      { url: redirectUrl },
       { status: 200 },
     );
 
@@ -57,9 +27,9 @@ export async function POST(request: Request) {
 
     return response;
   } catch (err: any) {
-    console.error('[STRIPE_ERROR]:', err.message);
+    console.error('[CHECKOUT_ERROR]:', err.message);
     return NextResponse.json(
-      { error: err.message }, // Clear error returned to browser
+      { error: err.message },
       { status: 500 },
     );
   }
