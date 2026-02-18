@@ -359,9 +359,8 @@ function MarqueeRow({
       }}
     >
       <div
-        className={`inline-flex flex-nowrap gap-3 marquee-track group-hover:[animation-play-state:paused] ${
-          reverse ? "marquee-reverse" : "marquee-normal"
-        }`}
+        className={`inline-flex flex-nowrap gap-3 marquee-track group-hover:[animation-play-state:paused] ${reverse ? "marquee-reverse" : "marquee-normal"
+          }`}
       >
         {duplicated.map((label, i) => (
           <span
@@ -696,7 +695,7 @@ export default function HomeClient() {
     if (!res.ok) {
       setGlobalError(
         (data && typeof data.error === "string" ? data.error : null) ||
-          `Request failed (${res.status})`
+        `Request failed (${res.status})`
       );
       return { ok: false, status: res.status, data };
     }
@@ -938,11 +937,10 @@ export default function HomeClient() {
           </h1>
           <div className="flex items-center gap-2">
             <span
-              className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${
-                loadingMe
+              className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${loadingMe
                   ? "bg-white/10 text-slate-500"
                   : "bg-indigo-500/20 text-indigo-200 border border-indigo-400/20"
-              }`}
+                }`}
             >
               {!loadingMe && (
                 <span className="inline-block w-2 h-2 bg-indigo-400 rounded-full mr-2" aria-hidden />
@@ -1331,60 +1329,60 @@ export default function HomeClient() {
           >
             <div aria-hidden className="pointer-events-none absolute -inset-24 bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-transparent blur-3xl opacity-60" />
             <div className="relative z-10 space-y-6">
-            <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-6">Preview</h3>
-            {preview ? (
-              <div className="space-y-6">
-                {process.env.NODE_ENV !== "production" && (
-                  <p className="text-xs text-slate-500 font-mono">
-                    previewState: {preview?.before ?? "—"} → {preview?.after ?? "—"} | hasPreview: {String(Boolean(preview))}
-                  </p>
-                )}
-                {(() => {
-                  const before = preview?.before ?? 0;
-                  const after = preview?.after ?? 0;
-                  return before === 0 && after === 0 ? (
-                    <p className="text-center text-slate-400 text-sm py-4">No score yet — click Analyze</p>
-                  ) : (
-                    <ScoreBar before={before} after={after} />
-                  );
-                })()}
-                {preview.diagnosis && (
-                  <p className="text-sm text-slate-300 leading-relaxed">{preview.diagnosis}</p>
-                )}
-                {preview.title && (
-                  <p className="text-sm font-medium text-white">{preview.title}</p>
-                )}
-                {preview.tags && preview.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {preview.tags.map((t, i) => (
-                      <span
-                        key={i}
-                        className="rounded-full bg-indigo-500/20 text-indigo-200 border border-indigo-400/20 px-3 py-1 text-xs font-medium transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-400/40 hover:bg-indigo-500/10"
-                      >
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                {preview.bullets && preview.bullets.length > 0 && (
-                  <ul className="space-y-2 text-sm text-slate-300">
-                    {preview.bullets.map((b, i) => (
-                      <li key={i} className="flex gap-2">
-                        <span className="text-indigo-400">•</span>
-                        {b}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                {preview.bestMicro && (
-                  <p className="text-xs text-slate-500">Best micro: {preview.bestMicro}</p>
-                )}
-              </div>
-            ) : (
-              <pre className="text-xs overflow-auto rounded-lg bg-black/20 p-4 whitespace-pre-wrap text-slate-400 border border-white/10">
-                {JSON.stringify(analyzeResult, null, 2)}
-              </pre>
-            )}
+              <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-6">Preview</h3>
+              {preview ? (
+                <div className="space-y-6">
+                  {process.env.NODE_ENV !== "production" && (
+                    <p className="text-xs text-slate-500 font-mono">
+                      previewState: {preview?.before ?? "—"} → {preview?.after ?? "—"} | hasPreview: {String(Boolean(preview))}
+                    </p>
+                  )}
+                  {(() => {
+                    const before = preview?.before ?? 0;
+                    const after = preview?.after ?? 0;
+                    return before === 0 && after === 0 ? (
+                      <p className="text-center text-slate-400 text-sm py-4">No score yet — click Analyze</p>
+                    ) : (
+                      <ScoreBar before={before} after={after} />
+                    );
+                  })()}
+                  {preview.diagnosis && (
+                    <p className="text-sm text-slate-300 leading-relaxed">{preview.diagnosis}</p>
+                  )}
+                  {preview.title && (
+                    <p className="text-sm font-medium text-white">{preview.title}</p>
+                  )}
+                  {preview.tags && preview.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {preview.tags.map((t, i) => (
+                        <span
+                          key={i}
+                          className="rounded-full bg-indigo-500/20 text-indigo-200 border border-indigo-400/20 px-3 py-1 text-xs font-medium transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-400/40 hover:bg-indigo-500/10"
+                        >
+                          {t}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {preview.bullets && preview.bullets.length > 0 && (
+                    <ul className="space-y-2 text-sm text-slate-300">
+                      {preview.bullets.map((b, i) => (
+                        <li key={i} className="flex gap-2">
+                          <span className="text-indigo-400">•</span>
+                          {b}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {preview.bestMicro && (
+                    <p className="text-xs text-slate-500">Best micro: {preview.bestMicro}</p>
+                  )}
+                </div>
+              ) : (
+                <pre className="text-xs overflow-auto rounded-lg bg-black/20 p-4 whitespace-pre-wrap text-slate-400 border border-white/10">
+                  {JSON.stringify(analyzeResult, null, 2)}
+                </pre>
+              )}
             </div>
           </section>
         )}
@@ -1553,13 +1551,12 @@ export default function HomeClient() {
                       <p className="text-xs text-slate-500">Competition Score</p>
                       <div className="flex flex-wrap items-center gap-2">
                         <span
-                          className={`rounded-full px-2 py-1 text-xs font-medium ${
-                            comp.level === "low"
+                          className={`rounded-full px-2 py-1 text-xs font-medium ${comp.level === "low"
                               ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/30"
                               : comp.level === "med"
                                 ? "bg-amber-500/20 text-amber-300 border border-amber-400/30"
                                 : "bg-rose-500/20 text-rose-300 border border-rose-400/30"
-                          }`}
+                            }`}
                         >
                           {comp.level === "low" ? "Low" : comp.level === "med" ? "Medium" : comp.level === "high" ? "High" : "Unknown"}
                         </span>
@@ -1937,7 +1934,7 @@ export default function HomeClient() {
                 <li className="flex gap-2">• Done.</li>
               </ul>
             </div>
-        </div>
+          </div>
         </section>
 
         <div className="h-px bg-white/10 my-10" aria-hidden />
