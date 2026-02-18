@@ -11,7 +11,8 @@ export async function POST(request: Request) {
 
     // Lemon Squeezy Product URL
     // In a real app, you might want to fetch this from an env var or config
-    const checkoutUrl = "https://buy.rankonetsy.com/buy/08ce9b6a-b949-494a-966e-5b7e98a53b02";
+    // Standard Lemon Squeezy URL (Temporary fix for custom domain propagation)
+    const checkoutUrl = "https://rankonetsy.lemonsqueezy.com/buy/08ce9b6a-b949-494a-966e-5b7e98a53b02";
 
     // Append custom data for session binding
     const redirectUrl = `${checkoutUrl}?checkout[custom][user_id]=${userId}`;
