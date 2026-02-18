@@ -1,10 +1,11 @@
-"use client";
-
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles, Zap, Smartphone, Check, DollarSign, BarChart3, Lock, CreditCard } from "lucide-react";
 import PricingModal from "../components/PricingModal";
+import GlobalHeader from "../components/GlobalHeader";
+import { useCredits } from "@/src/hooks/useCredits";
+import { usePaymentHandshake } from "@/src/hooks/usePaymentHandshake";
 
 const GLASS_CARD =
   "relative overflow-hidden rounded-2xl border border-white/10 bg-slate-900/40 backdrop-blur-xl transition-all duration-300 hover:border-indigo-500/30 hover:shadow-2xl hover:shadow-indigo-500/10";
@@ -13,18 +14,11 @@ export default function LandingPage() {
   const [email, setEmail] = useState("");
   const [waitlistStatus, setWaitlistStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [waitlistError, setWaitlistError] = useState<string | null>(null);
-
-  // Credit State & Pricing Modal
-  const [credits, setCredits] = useState(0); // Default to 0, load actual from local storage
-  const [showPricing, setShowPricing] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
-  useEffect(() => {
-    const savedCredits = localStorage.getItem("user_credits");
-    if (savedCredits) {
-      setCredits(parseInt(savedCredits, 10));
-    }
-  }, []);
+  // Universal Handshake & Credit Sync
+  const { updateCredits } = useCredits();
+  usePaymentHandshake(updateCredits);
 
   async function handleDirectCheckout() {
     setCheckoutLoading(true);
@@ -73,9 +67,7 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen text-slate-100 relative overflow-hidden font-sans">
-      <PricingModal isOpen={showPricing} onClose={() => setShowPricing(false)} />
-
+    <div className="min-h-screen text-slate-100 relative overflow-hidden font-sans pt-20">
       <div className="fixed inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950" />
       <div
         className="fixed inset-0 pointer-events-none"
@@ -87,34 +79,9 @@ export default function LandingPage() {
         }}
       />
 
-      {/* Sticky Header */}
-      <nav className="fixed top-0 w-full z-50 border-b border-white/5 bg-slate-950/80 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between py-3">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-600 shadow-lg shadow-indigo-500/20">
-              <BarChart3 className="w-5 h-5 text-white" />
-            </div>
-            <span className="font-bold text-xl tracking-tight text-white">SEO Command Center</span>
-          </div>
+      <GlobalHeader />
 
-          <div className="flex items-center gap-4">
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900 border border-white/10">
-              <Zap className={`w-3.5 h-3.5 ${credits > 0 ? "text-yellow-400" : "text-slate-500"}`} />
-              <span className="text-sm font-medium text-slate-200">{credits} Credits</span>
-            </div>
-            <button
-              onClick={() => setShowPricing(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition-all shadow-lg shadow-indigo-500/20"
-            >
-              <CreditCard className="w-4 h-4" />
-              <span className="hidden sm:inline">Get More Credits</span>
-              <span className="sm:hidden">Buy</span>
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      <main className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 sm:py-32 space-y-32 mt-10">
+      <main className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 sm:py-32 space-y-32">
         {/* Hero */}
         <motion.section
           initial={{ opacity: 0, y: 30 }}

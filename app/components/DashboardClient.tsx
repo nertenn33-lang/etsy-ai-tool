@@ -26,6 +26,9 @@ import { getSimulatedEtsyData, type EtsyTrendData } from "@/src/lib/etsyDataEngi
 import confetti from "canvas-confetti";
 import PricingModal from "./PricingModal";
 import ActionPlan from "./ActionPlan";
+import GlobalHeader from "./GlobalHeader";
+import { useCredits } from "@/src/hooks/useCredits";
+import { usePaymentHandshake } from "@/src/hooks/usePaymentHandshake";
 
 const GLASS_CARD = "relative overflow-hidden rounded-2xl border border-white/10 bg-slate-900/40 backdrop-blur-xl p-6";
 
@@ -40,81 +43,17 @@ export default function DashboardClient({ initialKeyword = "", initialData, read
     const [keyword, setKeyword] = useState(initialKeyword);
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState<EtsyTrendData | null>(initialData || null);
-    const [credits, setCredits] = useState(1);
+
+    // Unified Hook Usage
+    const { credits, updateCredits } = useCredits();
+    const { isPaymentProcessing } = usePaymentHandshake(updateCredits);
+
     const [showPricing, setShowPricing] = useState(false);
 
     // Restore Modal State
     const [showRestore, setShowRestore] = useState(false);
     const [restoreEmail, setRestoreEmail] = useState("");
     const [restoreStatus, setRestoreStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
-
-
-    const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
-
-    useEffect(() => {
-        // 1. Load from LocalStorage
-        const savedCredits = localStorage.getItem("user_credits");
-        if (savedCredits) {
-            setCredits(parseInt(savedCredits, 10));
-        }
-
-        // 2. Check for success param and start polling
-        const params = new URLSearchParams(window.location.search);
-        const success = params.get("success");
-        const sessionId = params.get("session_id");
-
-        if (success === "true") {
-            setIsPaymentProcessing(true);
-
-            // AUTO-BINDING: Verify session immediately to recover cookie if lost
-            if (sessionId) {
-                fetch("/api/payment/verify", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ session_id: sessionId })
-                }).then(res => res.json())
-                    .then(data => {
-                        if (data.success && data.credits) {
-                            setCredits(data.credits);
-                            localStorage.setItem("user_credits", data.credits.toString());
-                        }
-                    })
-                    .catch(err => console.error("Session verification failed:", err));
-            }
-
-            // Poll for credit update (1s interval)
-            const interval = setInterval(async () => {
-                try {
-                    const res = await fetch("/api/me");
-                    if (res.ok) {
-                        const data = await res.json();
-                        // If credits >= 3 (Payment confirmed - strict check)
-                        if (data.credits >= 3) {
-                            setCredits(data.credits);
-                            localStorage.setItem("user_credits", data.credits.toString());
-                            setIsPaymentProcessing(false);
-                            clearInterval(interval);
-
-                            confetti({
-                                particleCount: 150,
-                                spread: 70,
-                                origin: { y: 0.6 },
-                                colors: ['#6366f1', '#a855f7', '#ec4899']
-                            });
-
-                            // Clean URL
-                            window.history.replaceState({}, "", "/app");
-                        }
-                    }
-                } catch (e) {
-                    console.error("Polling error", e);
-                }
-            }, 1000);
-
-            // Cleanup
-            return () => clearInterval(interval);
-        }
-    }, []);
 
     async function handleAnalyze(e: React.FormEvent) {
         e.preventDefault();
@@ -132,7 +71,7 @@ export default function DashboardClient({ initialKeyword = "", initialData, read
         try {
             const result = await getSimulatedEtsyData(keyword);
             setData(result);
-            setCredits(prev => Math.max(0, prev - 1));
+            updateCredits(Math.max(0, credits - 1));
         } finally {
             setLoading(false);
         }
@@ -143,43 +82,23 @@ export default function DashboardClient({ initialKeyword = "", initialData, read
     // For now, we will add the UI element that links to /login
 
     return (
-        <div className="min-h-screen text-slate-100 font-sans selection:bg-indigo-500/30 overflow-x-hidden">
+        <div className="min-h-screen text-slate-100 font-sans selection:bg-indigo-500/30 overflow-x-hidden pt-20">
             <PricingModal isOpen={showPricing} onClose={() => setShowPricing(false)} />
 
-            <nav className="relative border-b border-white/5 bg-slate-950/50 backdrop-blur-md sticky top-0 z-50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-600 shadow-lg shadow-indigo-500/20">
-                            <BarChart3 className="w-5 h-5 text-white" />
-                        </div>
-                        <span className="font-bold text-xl tracking-tight text-white">SEO Command Center</span>
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                        {!readOnly && (
-                            <button
-                                onClick={() => setShowPricing(true)}
-                                className="group flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/50 border border-white/10 hover:border-indigo-500/50 transition-all duration-300"
-                            >
-                                <Zap className={`w-4 h-4 ${credits > 0 ? 'text-yellow-400' : 'text-slate-600'} group-hover:scale-110 transition-transform`} />
-                                <span className="text-sm font-medium">{credits} Credits</span>
-                                {credits === 1 && <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">Free Trial</span>}
-                                {credits !== 1 && <span className="ml-2 text-[10px] text-indigo-300 bg-indigo-500/10 px-2 py-0.5 rounded-full uppercase font-bold tracking-wider border border-indigo-500/20">Add</span>}
-                            </button>
-                        )}
-
-                        {/* Restore Button */}
-                        <button
-                            onClick={() => setShowRestore(true)}
-                            className="flex items-center gap-2 text-sm font-medium text-slate-300 hover:text-white transition-colors bg-white/5 hover:bg-white/10 px-4 py-2 rounded-lg border border-white/5"
-                        >
-                            <span>Restore Credits</span>
-                        </button>
-                    </div>
-                </div>
-            </nav>
+            {/* Replaced internal nav with GlobalHeader for consistency */}
+            <GlobalHeader />
 
             <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
+
+                {/* Secondary Actions Row (Restore) */}
+                <div className="flex justify-end">
+                    <button
+                        onClick={() => setShowRestore(true)}
+                        className="text-xs font-medium text-slate-400 hover:text-white transition-colors underline decoration-slate-600 hover:decoration-white underline-offset-4"
+                    >
+                        Restore Purchases via Email
+                    </button>
+                </div>
 
                 {/* Search Section */}
                 <motion.section
@@ -506,8 +425,7 @@ export default function DashboardClient({ initialKeyword = "", initialData, read
                                             if (res.ok) {
                                                 const data = await res.json();
                                                 setRestoreStatus("success");
-                                                setCredits(data.credits);
-                                                localStorage.setItem("user_credits", data.credits.toString());
+                                                updateCredits(data.credits); // Use hook updater
                                                 setTimeout(() => {
                                                     setShowRestore(false);
                                                     setRestoreStatus("idle");
