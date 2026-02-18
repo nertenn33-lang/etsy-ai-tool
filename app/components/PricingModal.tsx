@@ -105,7 +105,7 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
                 </div>
 
                 <p className="text-center text-xs text-slate-500">
-                    Secure payment via Stripe. One-time purchase.
+                    Secure payment via Lemon Squeezy. One-time purchase.
                 </p>
             </div>
         </div>
