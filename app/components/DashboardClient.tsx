@@ -23,6 +23,7 @@ import {
 import { motion } from "framer-motion";
 
 import { getSimulatedEtsyData, type EtsyTrendData } from "@/src/lib/etsyDataEngine";
+import confetti from "canvas-confetti";
 import PricingModal from "./PricingModal";
 import ActionPlan from "./ActionPlan";
 
@@ -48,10 +49,51 @@ export default function DashboardClient({ initialKeyword = "", initialData, read
     const [restoreStatus, setRestoreStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
 
+    const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
+
     useEffect(() => {
+        // 1. Load from LocalStorage
         const savedCredits = localStorage.getItem("user_credits");
         if (savedCredits) {
             setCredits(parseInt(savedCredits, 10));
+        }
+
+        // 2. Check for success param and start polling
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("success") === "true") {
+            setIsPaymentProcessing(true);
+
+            // Poll for credit update (1s interval)
+            const interval = setInterval(async () => {
+                try {
+                    const res = await fetch("/api/me");
+                    if (res.ok) {
+                        const data = await res.json();
+                        // If credits >= 3 (Payment confirmed - strict check)
+                        if (data.credits >= 3) {
+                            setCredits(data.credits);
+                            localStorage.setItem("user_credits", data.credits.toString());
+                            setIsPaymentProcessing(false);
+                            clearInterval(interval);
+
+                            confetti({
+                                particleCount: 150,
+                                spread: 70,
+                                origin: { y: 0.6 },
+                                colors: ['#6366f1', '#a855f7', '#ec4899']
+                            });
+
+                            // Clean URL
+                            window.history.replaceState({}, "", "/app");
+                        }
+                    }
+                } catch (e) {
+                    console.error("Polling error", e);
+                }
+            }, 1000);
+
+            // Cleanup
+            return () => clearInterval(interval);
         }
     }, []);
 
@@ -465,6 +507,27 @@ export default function DashboardClient({ initialKeyword = "", initialData, read
                                 </button>
                             </div>
                         </div>
+                    </div>
+                </div>
+            )}
+            {isPaymentProcessing && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm">
+                    <div className="flex flex-col items-center justify-center space-y-4 text-center">
+                        <div className="relative">
+                            <div className="w-16 h-16 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin"></div>
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <Zap className="w-6 h-6 text-indigo-400 animate-pulse" />
+                            </div>
+                        </div>
+                        <h3 className="text-2xl font-bold text-white">Payment Confirmed!</h3>
+                        <p className="text-indigo-300 animate-pulse">Updating your credits...</p>
+
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="mt-4 px-4 py-2 bg-indigo-600/50 hover:bg-indigo-600 text-white rounded-lg text-sm transition-colors border border-white/10"
+                        >
+                            Click here if not updating...
+                        </button>
                     </div>
                 </div>
             )}
