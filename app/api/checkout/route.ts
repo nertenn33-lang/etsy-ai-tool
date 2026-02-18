@@ -5,6 +5,9 @@ import { NextResponse } from "next/server";
 import { getOrCreateUid, uidCookieOptions } from "@/src/lib/uid";
 
 export async function POST(request: Request) {
+  console.log("[CHECKOUT_POST] Started");
+  console.log("LEMONSQUEEZY_VARIANT_ID:", process.env.LEMONSQUEEZY_VARIANT_ID);
+
   try {
     const { uid, cookieValueToSet } = await getOrCreateUid();
     const userId = uid;
@@ -17,6 +20,8 @@ export async function POST(request: Request) {
 
     // Construct final URL with params
     const checkoutUrl = `${baseUrl}?checkout[custom][user_id]=${userId}&checkout[success_url]=${successUrl}`;
+
+    console.log("[CHECKOUT_POST] URL generated:", checkoutUrl);
 
     const response = NextResponse.json(
       { url: checkoutUrl },
