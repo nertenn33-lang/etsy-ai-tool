@@ -60,8 +60,27 @@ export default function DashboardClient({ initialKeyword = "", initialData, read
 
         // 2. Check for success param and start polling
         const params = new URLSearchParams(window.location.search);
-        if (params.get("success") === "true") {
+        const success = params.get("success");
+        const sessionId = params.get("session_id");
+
+        if (success === "true") {
             setIsPaymentProcessing(true);
+
+            // AUTO-BINDING: Verify session immediately to recover cookie if lost
+            if (sessionId) {
+                fetch("/api/payment/verify", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ session_id: sessionId })
+                }).then(res => res.json())
+                    .then(data => {
+                        if (data.success && data.credits) {
+                            setCredits(data.credits);
+                            localStorage.setItem("user_credits", data.credits.toString());
+                        }
+                    })
+                    .catch(err => console.error("Session verification failed:", err));
+            }
 
             // Poll for credit update (1s interval)
             const interval = setInterval(async () => {
