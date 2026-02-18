@@ -94,8 +94,8 @@ Payments are handled via Lemon Squeezy.
 - `WEBHOOK_SECRET`: The signing secret from your Lemon Squeezy Webhook settings.
 
 **Workflow:**
-1.  User clicks "Buy" -> Redirects to `rankonetsy.lemonsqueezy.com` (Standard Checkout).
-2.  URL includes `?checkout[custom][user_id]=UID` to bind the purchase to the user.
+1.  User clicks "Buy" -> Redirects to `buy.rankonetsy.com` (Custom Domain).
+2.  URL includes `?checkout[custom][user_id]=UID` and `checkout[success_url]` for redirection.
 3.  Lemon Squeezy sends a `POST` request to `/api/webhook/lemonsqueezy`.
 4.  Server verifies the signature using `WEBHOOK_SECRET`.
 5.  If event is `order_created`, user gets **+3 Credits**.

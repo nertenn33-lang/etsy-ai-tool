@@ -11,8 +11,12 @@ export async function POST(request: Request) {
 
     // Lemon Squeezy Product URL
     // In a real app, you might want to fetch this from an env var or config
-    // Hardcoded Lemon Squeezy URL as requested to fix Vercel 404s
-    const checkoutUrl = `https://rankonetsy.lemonsqueezy.com/checkout/buy/37ce293d-bf78-454c-97cf-a4361405b1e7?checkout[custom][user_id]=${userId}`;
+    // Custom Domain Enabled (buy.rankonetsy.com)
+    const baseUrl = "https://buy.rankonetsy.com/checkout/buy/37ce293d-bf78-454c-97cf-a4361405b1e7";
+    const successUrl = "https://www.rankonetsy.com/app?success=true";
+
+    // Construct final URL with params
+    const checkoutUrl = `${baseUrl}?checkout[custom][user_id]=${userId}&checkout[success_url]=${successUrl}`;
 
     const response = NextResponse.json(
       { url: checkoutUrl },
