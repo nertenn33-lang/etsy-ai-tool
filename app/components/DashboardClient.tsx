@@ -46,7 +46,7 @@ export default function DashboardClient({ initialKeyword = "", initialData, read
 
     // Unified Hook Usage
     const { credits, updateCredits } = useCredits();
-    const { isPaymentProcessing } = usePaymentHandshake(updateCredits);
+    const { isProcessing: isPaymentProcessing } = usePaymentHandshake(updateCredits);
 
     const [showPricing, setShowPricing] = useState(false);
 
