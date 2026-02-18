@@ -24,10 +24,12 @@ export async function POST(request: Request) {
 
         const payload = JSON.parse(rawBody);
         const eventName = payload.meta.event_name;
-        const customData = payload.meta.custom_data;
-        const userId = customData?.user_id;
+        const customData = payload.meta.custom_data || {}; // Fallback to empty obj
+        const userId = customData.user_id;
 
-        console.log(`[LEMON_WEBHOOK] Event: ${eventName}, User: ${userId}`);
+        console.log(`[LEMON_WEBHOOK] Event: ${eventName}`);
+        console.log(`[LEMON_WEBHOOK] Custom Data:`, JSON.stringify(customData));
+        console.log(`[LEMON_WEBHOOK] User ID detected: ${userId}`);
 
         if (eventName === "order_created" && userId) {
             // Find user

@@ -19,7 +19,8 @@ export async function POST(request: Request) {
     const successUrl = "https://www.rankonetsy.com/app?success=true";
 
     // Construct final URL with params
-    const checkoutUrl = `${baseUrl}?checkout[custom][user_id]=${userId}&checkout[success_url]=${successUrl}`;
+    // Important: encodeURIComponent ensures the query string inside the query string is valid
+    const checkoutUrl = `${baseUrl}?checkout[custom][user_id]=${userId}&checkout[success_url]=${encodeURIComponent(successUrl)}`;
 
     console.log("[CHECKOUT_POST] URL generated:", checkoutUrl);
 
