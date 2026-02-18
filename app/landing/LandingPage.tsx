@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, Sparkles, Zap, Smartphone, Check, DollarSign } from "lucide-react";
+import { ArrowRight, Sparkles, Zap, Smartphone, Check, DollarSign, BarChart3, Lock, CreditCard } from "lucide-react";
+import PricingModal from "../components/PricingModal";
 
 const GLASS_CARD =
   "relative overflow-hidden rounded-2xl border border-white/10 bg-slate-900/40 backdrop-blur-xl transition-all duration-300 hover:border-indigo-500/30 hover:shadow-2xl hover:shadow-indigo-500/10";
@@ -12,6 +13,38 @@ export default function LandingPage() {
   const [email, setEmail] = useState("");
   const [waitlistStatus, setWaitlistStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [waitlistError, setWaitlistError] = useState<string | null>(null);
+
+  // Credit State & Pricing Modal
+  const [credits, setCredits] = useState(0); // Default to 0, load actual from local storage
+  const [showPricing, setShowPricing] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+
+  useEffect(() => {
+    const savedCredits = localStorage.getItem("user_credits");
+    if (savedCredits) {
+      setCredits(parseInt(savedCredits, 10));
+    }
+  }, []);
+
+  async function handleDirectCheckout() {
+    setCheckoutLoading(true);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert("Checkout failed. Please try again.");
+      }
+    } catch (error) {
+      console.error("Checkout error:", error);
+      alert("Something went wrong.");
+    } finally {
+      setCheckoutLoading(false);
+    }
+  }
 
   async function handleWaitlistSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -41,6 +74,8 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen text-slate-100 relative overflow-hidden font-sans">
+      <PricingModal isOpen={showPricing} onClose={() => setShowPricing(false)} />
+
       <div className="fixed inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950" />
       <div
         className="fixed inset-0 pointer-events-none"
@@ -52,7 +87,34 @@ export default function LandingPage() {
         }}
       />
 
-      <main className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 sm:py-32 space-y-32">
+      {/* Sticky Header */}
+      <nav className="fixed top-0 w-full z-50 border-b border-white/5 bg-slate-950/80 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between py-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-600 shadow-lg shadow-indigo-500/20">
+              <BarChart3 className="w-5 h-5 text-white" />
+            </div>
+            <span className="font-bold text-xl tracking-tight text-white">SEO Command Center</span>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900 border border-white/10">
+              <Zap className={`w-3.5 h-3.5 ${credits > 0 ? "text-yellow-400" : "text-slate-500"}`} />
+              <span className="text-sm font-medium text-slate-200">{credits} Credits</span>
+            </div>
+            <button
+              onClick={() => setShowPricing(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition-all shadow-lg shadow-indigo-500/20"
+            >
+              <CreditCard className="w-4 h-4" />
+              <span className="hidden sm:inline">Get More Credits</span>
+              <span className="sm:hidden">Buy</span>
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      <main className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 sm:py-32 space-y-32 mt-10">
         {/* Hero */}
         <motion.section
           initial={{ opacity: 0, y: 30 }}
@@ -78,11 +140,27 @@ export default function LandingPage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
             <Link
               href="/app"
-              className="group relative inline-flex items-center gap-2 rounded-full bg-white px-8 py-4 text-slate-950 font-bold transition-all hover:scale-105 hover:bg-slate-200"
+              className="group relative inline-flex items-center gap-2 rounded-full bg-white px-8 py-4 text-slate-950 font-bold transition-all hover:scale-105 hover:bg-slate-200 min-w-[200px] justify-center"
             >
-              Start analyzing for free
+              Free Analysis
               <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
             </Link>
+
+            {/* GOLDEN CTA */}
+            <button
+              onClick={handleDirectCheckout}
+              disabled={checkoutLoading}
+              className="group relative inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 px-8 py-4 text-white font-bold transition-all hover:scale-105 shadow-[0_0_20px_rgba(251,191,36,0.4)] hover:shadow-[0_0_30px_rgba(251,191,36,0.6)] min-w-[200px] justify-center"
+            >
+              {checkoutLoading ? (
+                <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <>
+                  Buy 3 Credits ($9.99)
+                  <Zap className="w-5 h-5 fill-white animate-pulse" />
+                </>
+              )}
+            </button>
           </div>
 
           {/* Mobile Preview Image Mockup (Abstract) */}
