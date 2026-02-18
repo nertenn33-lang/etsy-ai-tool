@@ -11,18 +11,11 @@ export async function POST(request: Request) {
 
     // Lemon Squeezy Product URL
     // In a real app, you might want to fetch this from an env var or config
-    // Lemon Squeezy Store URL from Environment
-    const storeUrl = process.env.NEXT_PUBLIC_LEMONSQUEEZY_STORE_URL;
-    if (!storeUrl) {
-      throw new Error("Missing NEXT_PUBLIC_LEMONSQUEEZY_STORE_URL");
-    }
-    const checkoutUrl = `${storeUrl}/checkout/buy/08ce9b6a-b949-494a-966e-5b7e98a53b02`;
-
-    // Append custom data for session binding
-    const redirectUrl = `${checkoutUrl}?checkout[custom][user_id]=${userId}`;
+    // Hardcoded Lemon Squeezy URL as requested to fix Vercel 404s
+    const checkoutUrl = `https://rankonetsy.lemonsqueezy.com/checkout/buy/37ce293d-bf78-454c-97cf-a4361405b1e7?checkout[custom][user_id]=${userId}`;
 
     const response = NextResponse.json(
-      { url: redirectUrl },
+      { url: checkoutUrl },
       { status: 200 },
     );
 
