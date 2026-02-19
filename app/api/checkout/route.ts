@@ -32,10 +32,6 @@ export async function POST(request: Request) {
       { status: 200 },
     );
 
-    if (cookieValueToSet) {
-      response.cookies.set("uid", cookieValueToSet, uidCookieOptions);
-    }
-
     return response;
   } catch (err: any) {
     console.error('[CHECKOUT_ERROR]:', err.message);
