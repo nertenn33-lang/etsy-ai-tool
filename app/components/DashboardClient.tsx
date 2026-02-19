@@ -46,7 +46,7 @@ export default function DashboardClient({ initialKeyword = "", initialData, read
 
     // Unified Hook Usage
     const { credits, updateCredits } = useCredits();
-    const { isProcessing: isPaymentProcessing } = usePaymentHandshake(updateCredits);
+    const { isProcessing: isPaymentProcessing, showToast, setShowToast } = usePaymentHandshake(updateCredits);
 
     const [showPricing, setShowPricing] = useState(false);
 
@@ -83,6 +83,24 @@ export default function DashboardClient({ initialKeyword = "", initialData, read
 
     return (
         <div className="min-h-screen text-slate-100 font-sans selection:bg-indigo-500/30 overflow-x-hidden pt-20">
+            {/* Success Toast */}
+            {showToast && (
+                <div className="fixed top-24 right-4 z-[70] max-w-sm w-full bg-slate-900/90 backdrop-blur-md border border-emerald-500/20 rounded-xl p-4 shadow-2xl flex items-center gap-4 animate-in slide-in-from-right-10 fade-in duration-300">
+                    <div className="p-2 bg-emerald-500/10 rounded-full">
+                        <Zap className="w-5 h-5 text-emerald-400" />
+                    </div>
+                    <div className="flex-1">
+                        <h4 className="font-semibold text-white">Payment Successful!</h4>
+                        <p className="text-xs text-slate-400 mt-0.5">Your credits will be updated in a few moments.</p>
+                    </div>
+                    <button onClick={() => setShowToast(false)} className="text-slate-500 hover:text-white transition-colors">
+                        <div className="w-4 h-4 rotate-45 transform origin-center text-current">
+                            +
+                        </div>
+                    </button>
+                    {/* Progress bar to auto-dismiss? Optional. */}
+                </div>
+            )}
             <PricingModal isOpen={showPricing} onClose={() => setShowPricing(false)} />
 
             {/* Replaced internal nav with GlobalHeader for consistency */}
