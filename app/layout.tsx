@@ -1,23 +1,6 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+import AuthSync from "@/app/components/AuthSync";
 
-import { Analytics } from "@vercel/analytics/react";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-export const metadata: Metadata = {
-  title: "RankOnEtsy - #1 Etsy SEO & AI Keyword Research Tool",
-  description: "Boost your Etsy sales with AI-powered keyword research, competitor analysis, and demand forecasting. Try RankOnEtsy for free.",
-};
+// ... existing imports ...
 
 export default function RootLayout({
   children,
@@ -25,13 +8,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
-        <Analytics />
-      </body>
-    </html>
+    <ClerkProvider>
+      <AuthSync />
+      <html lang="en">
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        >
+          {children}
+          <Analytics />
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

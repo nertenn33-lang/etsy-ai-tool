@@ -2,18 +2,18 @@
  * Redirect to Lemon Squeezy Checkout with Custom Data
  */
 import { NextResponse } from "next/server";
-import { getOrCreateUid, uidCookieOptions } from "@/src/lib/uid";
+import { auth } from "@clerk/nextjs/server";
 
 export async function POST(request: Request) {
   console.log("[CHECKOUT_POST] Started");
   console.log("LEMONSQUEEZY_VARIANT_ID:", process.env.LEMONSQUEEZY_VARIANT_ID);
 
   try {
-    const { uid, cookieValueToSet } = await getOrCreateUid();
-    const userId = uid;
+    const { userId } = auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    // Lemon Squeezy Product URL
-    // In a real app, you might want to fetch this from an env var or config
     // Verified Custom Domain (buy.rankonetsy.com)
     const baseUrl = "https://buy.rankonetsy.com/checkout/buy/37ce293d-bf78-454c-97cf-a4361405b1e7";
     const successUrl = "https://www.rankonetsy.com/app?success=true";
@@ -22,6 +22,7 @@ export async function POST(request: Request) {
     // Important: encodeURIComponent ensures the query string inside the query string is valid
     // We add both success_url and redirect_url to be safe, as requested
     const encodedSuccessUrl = encodeURIComponent(successUrl);
+    // CRITICAL: Inject Clerk userId into custom_data
     const checkoutUrl = `${baseUrl}?checkout[custom][user_id]=${userId}&checkout[success_url]=${encodedSuccessUrl}&checkout[redirect_url]=${encodedSuccessUrl}`;
 
     console.log("[CHECKOUT_POST] URL generated:", checkoutUrl);

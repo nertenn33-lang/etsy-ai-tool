@@ -32,34 +32,30 @@ export async function POST(request: Request) {
         console.log(`[LEMON_WEBHOOK] User ID detected: ${userId}`);
 
         if (eventName === "order_created" && userId) {
-            // Find user
-            const user = await prisma.user.findUnique({ where: { id: userId } });
+            // Find user by Clerk ID first
+            const user = await prisma.user.findUnique({ where: { clerkUserId: userId } });
 
             if (user) {
-                // Grant credits (Assume 3 for now as per pack)
+                // Grant credits
                 await prisma.user.update({
-                    where: { id: userId },
+                    where: { clerkUserId: userId },
                     data: {
                         credits: { increment: 3 },
                     },
                 });
-                console.log(`[LEMON_WEBHOOK] Granted 3 credits to ${userId}`);
+                console.log(`[LEMON_WEBHOOK] Granted 3 credits to Clerk User ${userId} (DB ID: ${user.id})`);
             } else {
-                // If user doesn't exist yet (guest mode first purchase?), create them
-                // In our current flow, guest users explicitly have a cookie ID, so they "exist" conceptually but maybe not in DB if they never analyzed?
-                // Actually getOrCreateUid makes sure they have an ID, but not necessarily a DB record if we rely on lazy creation.
-                // However, `getOrCreateUid` just generates a string.
-                // We should upsert to be safe.
+                // Fallback: If for some reason sync failed, create them with Clerk ID
                 await prisma.user.upsert({
-                    where: { id: userId },
+                    where: { clerkUserId: userId }, // This might fail if clerkUserId is null in DB, but it shouldn't be for new users
                     update: { credits: { increment: 3 } },
                     create: {
-                        id: userId,
-                        email: payload.data.attributes.user_email, // Save email from Lemon Squeezy
-                        credits: 3 // 3 credits for the purchase
+                        clerkUserId: userId,
+                        email: payload.data.attributes.user_email,
+                        credits: 3
                     }
                 });
-                console.log(`[LEMON_WEBHOOK] Created/Updated user ${userId} with 3 credits`);
+                console.log(`[LEMON_WEBHOOK] Created/Updated Clerk User ${userId} with 3 credits`);
             }
         }
 
