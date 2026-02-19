@@ -1,0 +1,11 @@
+<svg width="200" height="50" viewBox="0 0 200 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="40" height="40" rx="10" transform="translate(5 5)" fill="url(#paint0_linear)"/>
+<path d="M15 35L15 25M25 35L25 15M35 35L35 20" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="55" y="32" fill="white" font-family="sans-serif" font-weight="bold" font-size="24">RankOnEtsy</text>
+<defs>
+<linearGradient id="paint0_linear" x1="5" y1="5" x2="45" y2="45" gradientUnits="userSpaceOnUse">
+<stop stop-color="#6366f1"/>
+<stop offset="1" stop-color="#d946ef"/>
+</linearGradient>
+</defs>
+</svg>
