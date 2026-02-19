@@ -20,7 +20,9 @@ export async function POST(request: Request) {
 
     // Construct final URL with params
     // Important: encodeURIComponent ensures the query string inside the query string is valid
-    const checkoutUrl = `${baseUrl}?checkout[custom][user_id]=${userId}&checkout[success_url]=${encodeURIComponent(successUrl)}`;
+    // We add both success_url and redirect_url to be safe, as requested
+    const encodedSuccessUrl = encodeURIComponent(successUrl);
+    const checkoutUrl = `${baseUrl}?checkout[custom][user_id]=${userId}&checkout[success_url]=${encodedSuccessUrl}&checkout[redirect_url]=${encodedSuccessUrl}`;
 
     console.log("[CHECKOUT_POST] URL generated:", checkoutUrl);
 
