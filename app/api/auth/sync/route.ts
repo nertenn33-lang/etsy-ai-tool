@@ -13,15 +13,16 @@ export async function POST() {
     }
 
     try {
-        console.log(`[AUTH_SYNC] Syncing user: ${userId}`);
+        // Strict Upsert Logic as requested
         const result = await prisma.user.upsert({
             where: { clerkUserId: userId },
-            update: {}, // No-op
+            update: {}, // Do not overwrite if exists
             create: {
                 clerkUserId: userId,
+                // We still save email/name for admin convenience, but strictly ensuring credits: 1
                 email: user.emailAddresses[0]?.emailAddress,
                 name: `${user.firstName} ${user.lastName}`.trim(),
-                credits: 1 // Explicitly set 1 credit
+                credits: 1
             }
         });
         console.log(`[AUTH_SYNC] User synced. Credits: ${result.credits}`);

@@ -25,7 +25,7 @@ export default function GlobalHeader() {
                     </Link>
 
                     <div className="flex items-center gap-4">
-                        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900 border border-white/10">
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900 border border-white/10">
                             <Zap className={`w-3.5 h-3.5 ${credits > 0 ? "text-yellow-400" : "text-slate-500"}`} />
                             <span className="text-sm font-medium text-slate-200">{credits} Credits</span>
                         </div>

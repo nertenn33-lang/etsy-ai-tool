@@ -1,18 +1,52 @@
 import { NextResponse } from "next/server";
 import { getOrCreateUid, uidCookieOptions } from "@/src/lib/uid";
 import { prisma } from "@/src/lib/prisma";
+import { auth } from "@clerk/nextjs/server";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const { uid, cookieValueToSet } = await getOrCreateUid();
+    const { userId } = await auth();
+    let user;
 
-    const user = await prisma.user.upsert({
-      where: { id: uid },
+    if (userId) {
+      // Authenticated User
+      user = await prisma.user.findUnique({ where: { clerkUserId: userId } });
+      // If not found (sync lag?), fallback to creating or guest? 
+      // Better to just return what we have or null. 
+      // Ideally AuthSync handles creation.
+      // But let's be safe.
+      if (!user) {
+        // Maybe they haven't synced yet.
+        return NextResponse.json({ uid: userId, credits: 0 }); // Or 1?
+      }
+    } else {
+      // Guest User
+      const { uid, cookieValueToSet } = await getOrCreateUid();
 
-      create: { id: uid, credits: 1 }, // Manual override: 1 Free Credit
-      update: {},
+      // Return 1 credit for guests too if they are new, via upsert
+      user = await prisma.user.upsert({
+        where: { id: uid },
+        create: { id: uid, credits: 1 },
+        update: {},
+      });
+
+      const response = NextResponse.json({
+        uid: user.id,
+        credits: user.credits,
+      });
+
+      if (cookieValueToSet) {
+        response.cookies.set("uid", cookieValueToSet, uidCookieOptions);
+      }
+      return response;
+    }
+
+    // Authenticated Response
+    return NextResponse.json({
+      uid: user.id,
+      credits: user.credits,
     });
 
     const response = NextResponse.json({
